@@ -13,7 +13,7 @@ struct _ErrorCorrectionThreadArg
 {
 	int kmerLength ;
 	Store *kmers ;
-	struct _Read *readBatch ;
+	struct _Read *readBatch, *readBatch2 ;
 	int batchSize ;
 	int batchUsed ;
 	
@@ -21,6 +21,7 @@ struct _ErrorCorrectionThreadArg
 } ;
 
 void *ErrorCorrection_Thread( void *arg )  ;
-int ErrorCorrection( char *seq, char *qual, KmerCode &kcode, Store &kmers ) ;
+int GetStrongTrustedThreshold( char *seq, char *qual, KmerCode &kcode, Store &kmers ) ;
+int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCode &kcode, Store &kmers ) ;
 
 #endif

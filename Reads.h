@@ -24,6 +24,7 @@ class Reads
 		FILE *fp[MAX_READ_FILE] ;
 		FILE *outputFp[MAX_READ_FILE] ;
 		int FILE_TYPE[MAX_READ_FILE] ; // 0-FASTA, 1-FASTQ
+		bool paired[MAX_READ_FILE] ;
 		int fpUsed ;
 		int currentFpInd ;
 		char outputDirectory[256] ;
@@ -68,7 +69,7 @@ class Reads
 			}
 		}
 
-		void AddReadFile( char *file )
+		void AddReadFile( char *file, bool paired = false )
 		{
 			if ( fpUsed >= MAX_READ_FILE )
 			{
@@ -97,6 +98,7 @@ class Reads
 				sprintf( buffer, "%s/%s.cor.fa", outputDirectory, fileName ) ;
 			outputFp[ fpUsed ] = fopen( buffer, "w" ) ;
 
+			this->paired[ fpUsed ] = paired ;
 			++fpUsed ;
 		}
 
@@ -156,6 +158,7 @@ class Reads
 				if ( qual[len - 1] == '\n' )
 					qual[len - 1] = '\0' ;
 			}
+
 			return 1 ;
 		}
 
@@ -206,7 +209,7 @@ class Reads
 
 		void Output( int correction, int badPrefix, int badSuffix, bool allowTrimming )
 		{
-			char buffer[1024] ;
+			//char buffer[1024] ;
 			if ( correction == 0 && badPrefix == 0 && badSuffix == 0 )
 			{
 				fprintf( outputFp[ currentFpInd ], "%s\n%s\n", id, seq ) ;
@@ -299,7 +302,7 @@ class Reads
 				int badPrefix = readBatch[i].badPrefix ;
 				int badSuffix = readBatch[i].badSuffix ;
 				
-				char buffer[1024] ;
+				//char buffer[1024] ;
 				if ( correction == 0 && badPrefix == 0 && badSuffix == 0 )
 				{
 					fprintf( outputFp[ currentFpInd ], "%s\n%s\n", id, seq ) ;
@@ -344,6 +347,13 @@ class Reads
 					}
 				}
 			}
+		}
+
+		bool IsPaired()
+		{
+			if ( paired[ currentFpInd ] )
+				return true ;
+			return false ;
 		}
 } ;
 
