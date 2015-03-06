@@ -4,7 +4,7 @@ use strict ;
 
 my $i ;
 my @readFileList ;
-my $numOfThread = 0 ;
+my $numOfThread = 1 ;
 my $kmerSize = 23 ;
 my $bloomFilterSize = 100000000 ;
 
@@ -32,6 +32,11 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 	{
 		push @readFileList, $ARGV[$i+1] ;
 	}
+	elsif ( $ARGV[ $i ] eq "-p" )
+	{
+		push @readFileList, $ARGV[$i + 1] ;
+		push @readFileList, $ARGV[$i + 2] ;
+	}
 	elsif ( $ARGV[$i] eq "-t" )
 	{
 		$numOfThread = $ARGV[$i+1] ; 
@@ -43,6 +48,7 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 	elsif ( $ARGV[$i] eq "-ek" )
 	{
 		$bloomFilterSize = $ARGV[$i + 1] ;
+		# Knock out this argument.
 		my $j ; 
 		for ( $j = $i ; $j < scalar( @ARGV ) - 2 ; ++$j )
 		{
@@ -61,3 +67,5 @@ print( "Dump the kmers\n" ) ;
 system( "jellyfish dump -L 2 tmp.mer_counts > tmp.jf_dump" ) ;
 print( "Error correction\n" ) ;
 system( "./rcorrector @ARGV -c tmp.jf_dump" ) ;
+
+#system( "rm tmp.bc tmp.mer_counts tmp.jf_dump" );
