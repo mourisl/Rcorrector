@@ -54,33 +54,22 @@ class KmerCode
 			code = crCode ; 
 		}
 
-		uint64_t GetCanonicalCode()
+		
+		uint64_t GetCanonicalKmerCode() 
 		{
 			int i ;
-
-			if ( ( ( code >> ( kmerLength / 2 ) ) & 3ull ) <= 1ull )
-				return code ;
-			else
+			uint64_t crCode = 0ull ; // complementary code
+			for ( i = 0 ; i < kmerLength ; ++i )
 			{
-				uint64_t crCode = 0ull ; // complementary code
-				for ( i = 0 ; i < kmerLength ; ++i )
-				{
-					//uint64_t tmp = ( code >> ( 2ull * (k - i - 1) ) ) & 3ull   ; 
-					//crCode = ( crCode << 2ull ) | ( 3 - tmp ) ;
+				//uint64_t tmp = ( code >> ( 2ull * (k - i - 1) ) ) & 3ull   ; 
+				//crCode = ( crCode << 2ull ) | ( 3 - tmp ) ;
 
-					uint64_t tmp = ( code >> ( 2ull * i ) ) & 3ull ;
-					crCode = ( crCode << 2ull ) | ( 3ull - tmp ) ;
-				}
-				return crCode ; 
+				uint64_t tmp = ( code >> ( 2ull * i ) ) & 3ull ;
+				crCode = ( crCode << 2ull ) | ( 3ull - tmp ) ;
 			}
+			return crCode < code ? crCode : code ;
 		}
-		
-		bool IsCanonical()
-		{
-			// Test whether this kmer is canonical.
-			return ( ( code >> ( kmerLength / 2 ) ) & 3 ) <= 1ull ;
-		}
-		
+
 		int GetKmerLength() { return kmerLength ; }
 
 		bool IsValid() 

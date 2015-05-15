@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS= -Wall -lpthread -g
+CXXFLAGS= -Wall -lpthread -g -I . -std=c++0x
 DEBUG=
 OBJECTS = KmerCode.o ErrorCorrection.o
 all: main.o $(OBJECTS)

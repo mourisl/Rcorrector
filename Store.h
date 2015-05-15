@@ -5,7 +5,8 @@
 */
 #include <stdio.h>
 #include <stdint.h>
-#include <tr1/unordered_map>
+//#include <tr1/unordered_map>
+#include <unordered_map>
 
 #include "KmerCode.h"
 
@@ -14,22 +15,32 @@ class Store
 private:
 	uint64_t size ;
 	//std::map<uint64_t, int> hash ;
-	std::tr1::unordered_map<uint64_t, int> hash ;
+	std::unordered_map<uint64_t, int> hash ;
+
 public:
 	Store()
 	{
-	} 
+	}
+
+	Store( uint64_t cnt )
+	{
+		hash.reserve( cnt ) ;
+	}
 
 	~Store() 
 	{
 	}
 
-	
+	void Allocate( uint64_t cnt )
+	{
+		hash.reserve( cnt ) ;
+	}
+
 	int Put( KmerCode &code, int cnt  ) 
 	{
 		if ( !code.IsValid() )
 			return 0 ;
-		hash[ code.GetCode() ] = cnt ;
+		hash[ code.GetCanonicalKmerCode() ] = cnt ;
 		return 0 ;
 	}
 
@@ -37,9 +48,9 @@ public:
 	{
 		if ( !code.IsValid() )
 			return 0 ;
-		if ( hash.count( code.GetCode() ) == 0 )
+		if ( hash.count( code.GetCanonicalKmerCode() ) == 0 )
 			return 0 ;
-		return hash[ code.GetCode() ] ;
+		return hash[ code.GetCanonicalKmerCode() ] ;
 	}
 
 

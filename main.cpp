@@ -190,7 +190,20 @@ int main( int argc, char *argv[] )
 		pthread_mutex_init( &mutexErrorCorrection, NULL ) ;
 	}
 
+	// Test how many kmers are in the jellyfish file
+	/*uint64_t kmerCnt = 0 ;
+	while ( fscanf( fpJellyFishDump, "%s", buffer ) != EOF )
+	{
+		int count = atoi( &buffer[1] ) ;
+		fscanf( fpJellyFishDump, "%s", buffer ) ;
+		if ( count <= 1 )
+			continue ;
+		++kmerCnt ;
+	}
+	kmers.Allocate( kmerCnt ) ;
+
 	// Read in the kmers from the dump of JellyFish
+	rewind( fpJellyFishDump ) ;*/
 	while ( fscanf( fpJellyFishDump, "%s", buffer ) != EOF )
 	{
 		int count = atoi( &buffer[1] ) ;
@@ -201,8 +214,6 @@ int main( int argc, char *argv[] )
 		kcode.Restart() ;
 		for ( i = 0 ; buffer[i] ; ++i )
 			kcode.Append( buffer[i] ) ;
-		kmers.Put( kcode, count ) ;
-		kcode.ReverseComplement() ;
 		kmers.Put( kcode, count ) ;
 	}
 
