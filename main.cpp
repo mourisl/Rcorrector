@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <sys/stat.h>
 //#include <pthread.h>
 //#include <time.h>
 
@@ -21,6 +22,7 @@ char nucToNum[26] = { 0, -1, 1, -1, -1, -1, 2,
 char numToNuc[26] = {'A', 'C', 'G', 'T'} ;
 bool agressiveCorrection ;
 int MAX_FIX_PER_100 ;
+int MAX_FIX_PER_K ;
 double ERROR_RATE ;
 
 struct _summary
@@ -54,7 +56,9 @@ void PrintHelp()
 		"\t-t number of threads to use (default: 1)\n"
 		//"\t-trim allow trimming (default: false)\n"
 		//"\t-all: output all the reads including those unfixable (default: false)\n"
-		"\t-maxcor: the maximum number of correction every 100bp (default: 8)\n" ) ;
+		"\t-maxcor INT: the maximum number of correction every 100bp (default: 8)\n" 
+		"\t-maxcorK INT: the maximum number of correction within k-bp window (default: 4)\n"
+		) ;
 }
 
 void UpdateSummary( int corCnt, struct _summary &summary )
@@ -100,6 +104,7 @@ int main( int argc, char *argv[] )
 	numOfThreads = 1 ;
 	agressiveCorrection = false ;
 	MAX_FIX_PER_100 = 8 ;
+	MAX_FIX_PER_K = 4 ;
 
 	summary.totalCorrections = 0 ;
 	summary.totalReads = 0 ;
@@ -119,6 +124,7 @@ int main( int argc, char *argv[] )
 		}
 		else if ( !strcmp( "-od", argv[i] ) )
 		{
+			mkdir( argv[i + 1], 0700 ) ;
 			reads.SetOutputDirectory( argv[i + 1] ) ;
 			++i ;
 		}
@@ -145,6 +151,11 @@ int main( int argc, char *argv[] )
 		else if ( !strcmp( "-maxcor", argv[i] ) )
 		{
 			MAX_FIX_PER_100 = atoi( argv[i + 1] ) ;
+			++i ;
+		}
+		else if ( !strcmp( "-maxcor", argv[i] ) )
+		{
+			MAX_FIX_PER_K = atoi( argv[i + 1] ) ;
 			++i ;
 		}
 		/*else if ( !strcmp( "--agressive", argv[i] ) )

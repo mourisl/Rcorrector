@@ -10,6 +10,7 @@ extern char nucToNum[26] ;
 extern char numToNuc[26] ;
 
 extern int MAX_FIX_PER_100 ;
+extern int MAX_FIX_PER_K ;
 extern double ERROR_RATE ;
 // Collect the information for fixing starting from a specific position
 struct _fix
@@ -1207,7 +1208,7 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 			}
 	}	
 
-	if ( totalFix > 3 )
+	if ( totalFix >= MAX_FIX_PER_K )
 	{
 		iBuffer[0] = 0 ;
 		for ( i = 0 ; i < readLength ; ++i )
@@ -1218,9 +1219,10 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 
 		for ( i = 0 ; i < kcnt ; ++i )
 		{
-			int threshold = 4 ;
+			int threshold = MAX_FIX_PER_K ;
+			// Allowing slightly more on the 3' end
 			if ( i > 0.7 * readLength )
-				threshold = 5 ;
+				++threshold ;
 			if ( iBuffer[i + kmerLength] - iBuffer[i] > threshold )
 				return -1 ;
 		}

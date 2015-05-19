@@ -5,10 +5,10 @@ use strict ;
 my $i ;
 my @readFileList ;
 my $numOfThread = 1 ;
-my $kmerSize = 23 ;
+my $kmerSize = "" ;
 my $bloomFilterSize = 100000000 ;
 
-my $usage = "Usage: perl ./run.pl [OPTIONS]\n".
+my $usage = "Usage: perl ./run_rcorrector.pl [OPTIONS]\n".
 		"OPTIONS:\n".
 		"Required parameters:\n".
 		"\t-r seq_file: seq_file is the path to the sequence file. Can use multiple -r to specifiy multiple sequence files\n".
@@ -17,7 +17,6 @@ my $usage = "Usage: perl ./run.pl [OPTIONS]\n".
 		"\t-od output_file_directory (default: ./)\n".
 		"\t-t number of threads to use (default: 1)\n".
 		"\t-trim allow trimming (default: false)\n".
-		"\t-all: output all the reads including those unfixable (default: false)\n".
 		"\t-maxcor: the maximum number of correction every 100bp (default: 8)\n".
 		"\t-ek expected_number_of_kmers: does not affect the correctness of program but affect the memory usage (default: 100000000)"; 
 
