@@ -3,11 +3,13 @@ Rcorrector
 
 Described in:
 
-Rcorrrector includes program Jellyfish2 []()
+Rcorrrector includes program [Jellyfish2](http://www.genome.umd.edu/jellyfish.html)
 
 ### What is Rcorrector?
 
-Rcorrector is a kmer-based error correction method for RNA-seq data. It 
+Rcorrector(Rna-seq error CORRECTOR) is a kmer-based error correction method for RNA-seq data. 
+
+Rcorrector can also be applied to other type of sequencing data where the read coverage is non-uniform, such as single-cell sequencing.
 
 ### Install
 
