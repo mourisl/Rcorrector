@@ -1,17 +1,23 @@
 #!/bin/perl
 
 use strict ;
+use Cwd 'cwd' ;
+use Cwd 'abs_path' ;
+use File::Basename;
 
 my $i ;
 my @readFileList ;
 my $numOfThread = 1 ;
 my $kmerSize = "" ;
 my $bloomFilterSize = 100000000 ;
+my $WD = dirname( abs_path( $0 ) ) ;
+
 
 my $usage = "Usage: perl ./run_rcorrector.pl [OPTIONS]\n".
 		"OPTIONS:\n".
 		"Required parameters:\n".
 		"\t-r seq_file: seq_file is the path to the sequence file. Can use multiple -r to specifiy multiple sequence files\n".
+		"\t-p seq_file_left seq_file_right: the paths to the paired-end data set. Can use multiple -p to specifiy multiple sequence files\n".
 		"\t-k kmer_length\n".
 		"Other parameters:\n".
 		"\t-od output_file_directory (default: ./)\n".
@@ -60,11 +66,12 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 #`echo $numOfThread > tmp.out `
 
 print( "Count the kmers\n" ) ;
-system( "jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp.bc @readFileList" ) ;
-system( "jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp.bc -o tmp.mer_counts @readFileList" ) ;
+
+system( "$WD/jellyfish-2.1.3/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp.bc @readFileList" ) ;
+system( "$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp.bc -o tmp.mer_counts @readFileList" ) ;
 print( "Dump the kmers\n" ) ;
-system( "jellyfish dump -L 2 tmp.mer_counts > tmp.jf_dump" ) ;
+system( "$WD/jellyfish-2.1.3/bin/jellyfish dump -L 2 tmp.mer_counts > tmp.jf_dump" ) ;
 print( "Error correction\n" ) ;
-system( "./rcorrector @ARGV -c tmp.jf_dump" ) ;
+system( "$WD/rcorrector @ARGV -c tmp.jf_dump" ) ;
 
 #system( "rm tmp.bc tmp.mer_counts tmp.jf_dump" );

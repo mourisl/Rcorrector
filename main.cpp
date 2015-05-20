@@ -49,6 +49,7 @@ void PrintHelp()
 		"OPTIONS:\n"
 		"Required parameters:\n"
 		"\t-r seq_file: seq_file is the path to the sequence file. Can use multiple -r to specifiy multiple sequence files\n"
+		"\t-p seq_file_left seq_file_right: the paths to the paired-end data set. Can use multiple -p to specifiy multiple sequence files\n"
 		"\t-c jf_dump: the kmer counts dumped by JellyFish\n"
 		"\t-k kmer_length\n"
 		"Other parameters:\n"
