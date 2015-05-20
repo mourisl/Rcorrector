@@ -12,4 +12,4 @@ KmerCode.o: KmerCode.cpp KmerCode.h
 ErrorCorrection.o: ErrorCorrection.cpp ErrorCorrection.h
 
 clean:
-	rm *.o *.gch
+	rm *.o *.gch rcorrector
