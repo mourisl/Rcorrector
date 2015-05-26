@@ -8,7 +8,7 @@ use File::Basename;
 my $i ;
 my @readFileList ;
 my $numOfThread = 1 ;
-my $kmerSize = "" ;
+my $kmerSize = 23 ;
 my $bloomFilterSize = 100000000 ;
 my $WD = dirname( abs_path( $0 ) ) ;
 
@@ -18,8 +18,8 @@ my $usage = "Usage: perl ./run_rcorrector.pl [OPTIONS]\n".
 		"Required parameters:\n".
 		"\t-r seq_file: seq_file is the path to the sequence file. Can use multiple -r to specifiy multiple sequence files\n".
 		"\t-p seq_file_left seq_file_right: the paths to the paired-end data set. Can use multiple -p to specifiy multiple sequence files\n".
-		"\t-k kmer_length\n".
 		"Other parameters:\n".
+		"\t-k kmer_length (default: 23)\n".
 		"\t-od output_file_directory (default: ./)\n".
 		"\t-t number of threads to use (default: 1)\n".
 		"\t-trim allow trimming (default: false)\n".

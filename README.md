@@ -3,13 +3,11 @@ Rcorrector
 
 Described in:
 
-Rcorrrector includes program [Jellyfish2](http://www.genome.umd.edu/jellyfish.html)
+Rcorrrector includes program Jellyfish2 []()
 
 ### What is Rcorrector?
 
-Rcorrector(Rna-seq error CORRECTOR) is a kmer-based error correction method for RNA-seq data. 
-
-Rcorrector can also be applied to other type of sequencing data where the read coverage is non-uniform, such as single-cell sequencing.
+Rcorrector is a kmer-based error correction method for RNA-seq data. It 
 
 ### Install
 
@@ -22,14 +20,14 @@ Rcorrector can also be applied to other type of sequencing data where the read c
 		Required
 		-r STRING: the path to the sequence file. Can use multiple -r to specifiy multiple sequence files
 		-p STRING STRING: the paths to the paired-end data set. Can use multiple -p to specifiy multiple sequence files
-		-k INT: kmer_length
 		Optional
+		-k INT: kmer_length (default: 23)
 		-od STRING: output_file_directory (default: ./)
 		-t INT: number of threads to use (default: 1)
 		-trim : allow trimming (default: false)
 		-maxcor INT: the maximum number of correction every 100bp (default: 8)\n
 		-maxcorK INT: the maximum number of correction within k-bp window (default: 4)
-		-ek INT: expected_number_of_kmers; does not affect the correctness of program but affect the memory usage (default: 100000000); 
+		-ek INT: expected number of kmers; does not affect the correctness of program but affect the memory usage (default: 100000000); 
 
 
 ### Output
