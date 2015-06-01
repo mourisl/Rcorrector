@@ -2,7 +2,10 @@ Rcorrector
 =========
 
 Described in:
+
 Song, L., Florea, L., Rcorrector: Efficient and accurate error correction for Illumina RNA-seq reads. 2015
+
+Copyright (C) 2012-2013, and GNU GPL, by Li Song and Liliana Florea
 
 Rcorrrector includes the program [Jellyfish2](http://www.genome.umd.edu/jellyfish.html)
 
