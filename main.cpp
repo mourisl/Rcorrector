@@ -80,7 +80,7 @@ void PrintSummary( const struct _summary &summary )
 int main( int argc, char *argv[] )
 {
 	int i, j, k ;
-	int kmerLength = -1 ;
+	int kmerLength = 23 ;
 	Reads reads ;
 	Reads pairedReads ;
 
