@@ -4,7 +4,12 @@ LINKFLAGS = -I . -lpthread
 DEBUG=
 OBJECTS = KmerCode.o ErrorCorrection.o
 all: main.o $(OBJECTS)
-	$(CXX) -o rcorrector $(CXXFLAGS) $(OBJECTS) main.o $(LINKFLAGS) 
+	$(CXX) -o rcorrector $(CXXFLAGS) $(OBJECTS) main.o $(LINKFLAGS)
+	if [ ! -f ./jellyfish-2.1.3/bin/jellyfish ] ; \
+	then \
+		tar -xzf jellyfish-2.1.3.tar.gz ; cd jellyfish-2.1.3 && ./configure && make ;\
+	fi;
+
 
 main.o: main.cpp utils.h Reads.h Store.h
 KmerCode.o: KmerCode.cpp KmerCode.h 

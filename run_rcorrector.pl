@@ -72,6 +72,6 @@ system( "$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $n
 print( "Dump the kmers\n" ) ;
 system( "$WD/jellyfish-2.1.3/bin/jellyfish dump -L 2 tmp.mer_counts > tmp.jf_dump" ) ;
 print( "Error correction\n" ) ;
-system( "$WD/rcorrector @ARGV -c tmp.jf_dump" ) ;
+system( "$WD/rcorrector @ARGV -c tmp.jf_dump -k $kmerSize" ) ;
 
 #system( "rm tmp.bc tmp.mer_counts tmp.jf_dump" );
