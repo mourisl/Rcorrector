@@ -18,7 +18,7 @@ Rcorrector can also be applied to other type of sequencing data where the read c
 ### Install
 
 1. Clone the [GitHub repo](https://github.com/mourisl/rcorrector), e.g. with `git clone https://github.com/mourisl/rcorrector.git`
-2. Run `sh build.sh` in the repo directory
+2. Run `make` in the repo directory
 
 ### Usage
 	Usage: perl run_rcorrector.pl [OPTIONS]
@@ -41,7 +41,7 @@ For each input file specified by "-r" or "-p", Rcorrector will generate the corr
 
 
 ### Example
-perl run_rcorrector.pl -p frag_1.fq frag_2.fq -k 23 
+perl run_rcorrector.pl -p frag_1.fq frag_2.fq  
 
 ### Contact
 lsong10@jhu.edu
