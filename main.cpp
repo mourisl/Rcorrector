@@ -25,6 +25,7 @@ int MAX_FIX_PER_100 ;
 int MAX_FIX_PER_K ;
 double ERROR_RATE ;
 char badQualityThreshold ; // quality <= this is bad
+bool zlibVersionChecked = false ;
 
 struct _summary
 {
@@ -392,6 +393,7 @@ int main( int argc, char *argv[] )
 
 		struct _Read *readBatch = ( struct _Read *)malloc( sizeof( struct _Read ) * maxBatchSize ) ;
 		struct _Read *readBatch2 = ( struct _Read *)malloc( sizeof( struct _Read ) * maxBatchSize ) ;
+		int fileInd1, fileInd2 ;
 
 		arg.kmerLength = kmerLength ;
 		arg.kmers = &kmers ;
@@ -405,10 +407,10 @@ int main( int argc, char *argv[] )
 		
 		while ( 1 )
 		{
-			batchSize = reads.GetBatch( readBatch, maxBatchSize, true, true ) ;
+			batchSize = reads.GetBatch( readBatch, maxBatchSize, fileInd1, true, true ) ;
 			if ( reads.IsPaired() )
 			{
-				int tmp = pairedReads.GetBatch( readBatch2, maxBatchSize, true, true ) ;
+				int tmp = pairedReads.GetBatch( readBatch2, maxBatchSize, fileInd2, true, true ) ;
 				if ( tmp != batchSize )
 				{
 					printf( "ERROR: The files are not paired!\n" ) ; 
@@ -426,13 +428,13 @@ int main( int argc, char *argv[] )
 			for ( i = 0 ; i < numOfThreads ; ++i )
 				pthread_join( threads[i], &pthreadStatus ) ;
 
-			reads.OutputBatch( readBatch, batchSize, false ) ;
+			reads.OutputBatch( readBatch, batchSize, false, fileInd1 ) ;
 			for ( i = 0 ; i < batchSize ; ++i )
 				UpdateSummary( readBatch[i].correction, summary ) ;
 
 			if ( reads.IsPaired() )
 			{
-				pairedReads.OutputBatch( readBatch2, batchSize, false ) ;
+				pairedReads.OutputBatch( readBatch2, batchSize, false, fileInd2 ) ;
 				for ( i = 0 ; i < batchSize ; ++i )
 					UpdateSummary( readBatch2[i].correction, summary ) ;
 			}

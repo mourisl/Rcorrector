@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS= -Wall -O3 -std=c++0x
-LINKFLAGS = -I . -lpthread  
+LINKFLAGS = -I . -lpthread -lz 
 DEBUG=
 OBJECTS = KmerCode.o ErrorCorrection.o
 all: main.o $(OBJECTS)

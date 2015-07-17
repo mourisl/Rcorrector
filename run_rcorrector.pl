@@ -23,7 +23,7 @@ my $usage = "Usage: perl ./run_rcorrector.pl [OPTIONS]\n".
 		"\t-od output_file_directory (default: ./)\n".
 		"\t-t number of threads to use (default: 1)\n".
 		#"\t-trim allow trimming (default: false)\n".
-		"\t-maxcor: the maximum number of correction every 100bp (default: 8)\n".
+		"\t-maxcorK INT: the maximum number of correction within k-bp window (default: 4)\n".
 		"\t-ek expected_number_of_kmers: does not affect the correctness of program but affect the memory usage (default: 100000000)"; 
 
 if ( scalar( @ARGV ) == 0 )
@@ -37,13 +37,26 @@ my @firstMateFileList ;
 my @secondMateFileList ;
 
 my @rcorrectorArguments ;
+my @gzippedFileList ;
+
+sub AddJellyFishReadFile
+{
+	if ( $_[0] =~ /gz$/ )
+	{
+		push @gzippedFileList, $_[0] ;
+	}
+	else
+	{
+		push @readFileList, $_[0] ;
+	}
+}
 
 for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 {
 	if ( $ARGV[$i] eq "-r" )
 	{
-		push @readFileList, $ARGV[$i+1] ;
-
+		AddJellyFishReadFile( $ARGV[ $i + 1] ) ;
+		
 		push @rcorrectorArguments, $ARGV[$i] ;
 		push @rcorrectorArguments, $ARGV[$i + 1] ;
 
@@ -51,8 +64,8 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 	}
 	elsif ( $ARGV[ $i ] eq "-p" )
 	{
-		push @readFileList, $ARGV[$i + 1] ;
-		push @readFileList, $ARGV[$i + 2] ;
+		AddJellyFishReadFile( $ARGV[ $i + 1 ] ) ;
+		AddJellyFishReadFile( $ARGV[ $i + 2 ] ) ;
 		
 		push @rcorrectorArguments, $ARGV[$i] ;
 		push @rcorrectorArguments, $ARGV[$i + 1] ;
@@ -66,7 +79,7 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 		my $j ;
 		for ( $j = 0 ; $j < scalar( @cols ) ; ++$j )
 		{
-			push @readFileList, $cols[ $j ] ;
+			AddJellyFishReadFile( $cols[ $j ] ) ;
 			push @singleFileList, $cols[ $j ] ;
 		}
 		++$i ;
@@ -77,7 +90,7 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 		my $j ;
 		for ( $j = 0 ; $j < scalar( @cols ) ; ++$j )
 		{
-			push @readFileList, $cols[ $j ] ;
+			AddJellyFishReadFile( $cols[ $j ] ) ;
 			push @firstMateFileList, $cols[ $j ] ;
 		}
 		++$i ;
@@ -88,7 +101,7 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 		my $j ;
 		for ( $j = 0 ; $j < scalar( @cols ) ; ++$j )
 		{
-			push @readFileList, $cols[ $j ] ;
+			AddJellyFishReadFile( $cols[ $j ] ) ;
 			push @secondMateFileList, $cols[ $j ] ;
 		}
 		++$i ;
@@ -153,10 +166,22 @@ for ( my $i = 0 ; $i < @firstMateFileList ; ++$i )
 
 print( "Count the kmers\n" ) ;
 
-print( "$WD/jellyfish-2.1.3/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp.bc @readFileList\n" ) ;
-system( "$WD/jellyfish-2.1.3/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp.bc @readFileList" ) ;
-print( "$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp.bc -o tmp.mer_counts @readFileList\n" ) ;
-system( "$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp.bc -o tmp.mer_counts @readFileList" ) ;
+# build the file list for jellyfish
+my $jellyfishFiles = "" ;
+for ( my $i = 0 ; $i < @readFileList ; ++$i )
+{
+	$jellyfishFiles .= $readFileList[$i]." " ;
+}
+
+for ( my $i = 0 ; $i < @gzippedFileList ; ++$i )
+{
+	$jellyfishFiles .= "<(gzip -cd ".$gzippedFileList[$i].") " ;
+}
+
+print( "$WD/jellyfish-2.1.3/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp.bc $jellyfishFiles\n" ) ;
+system( "bash -c \"$WD/jellyfish-2.1.3/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp.bc $jellyfishFiles\"" ) ;
+print( "$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp.bc -o tmp.mer_counts $jellyfishFiles\n" ) ;
+system( "bash -c \"$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp.bc -o tmp.mer_counts $jellyfishFiles\"" ) ;
 
 print( "Dump the kmers\n" ) ;
 print( "$WD/jellyfish-2.1.3/bin/jellyfish dump -L 2 tmp.mer_counts > tmp.jf_dump\n" ) ;
