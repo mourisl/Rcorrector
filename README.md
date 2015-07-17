@@ -24,15 +24,15 @@ Rcorrector can also be applied to other type of sequencing data where the read c
 	Usage: perl run_rcorrector.pl [OPTIONS]
 	OPTIONS:
 		Required
-		-r STRING: the path to the sequence file. Can use multiple -r to specifiy multiple sequence files
-		-p STRING STRING: the paths to the paired-end data set. Can use multiple -p to specifiy multiple sequence files
+		-s seq_files: comma separated files for single-end data sets
+		-1 seq_files_left: comma separated files for the first mate in the paried-end data sets
+		-2 seq_files_right: comma separated files for the second mate in the paired-end data sets
 		Optional
 		-k INT: kmer_length (default: 23)
 		-od STRING: output_file_directory (default: ./)
 		-t INT: number of threads to use (default: 1)
 		-trim : allow trimming (default: false)
-		-maxcor INT: the maximum number of corrections every 100bp (default: 8)
-		-maxcorK INT: the maximum number of corrections within k-bp window (default: 4)
+		-maxcorK INT: the maximum number of correction within k-bp window (default: 4)
 		-ek INT: expected number of kmers; does not affect the correctness of program but affects the memory usage (default: 100000000); 
 
 
