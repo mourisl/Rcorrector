@@ -4,7 +4,7 @@
 
 //#define DEBUG
 
-#define MAX_TRIAL 10000
+#define MAX_TRIAL 1025
 
 extern char nucToNum[26] ;
 extern char numToNuc[26] ;
@@ -12,6 +12,9 @@ extern char numToNuc[26] ;
 extern int MAX_FIX_PER_100 ;
 extern int MAX_FIX_PER_K ;
 extern double ERROR_RATE ;
+
+extern char badQualityThreshold ;
+
 // Collect the information for fixing starting from a specific position
 struct _fix
 {
@@ -112,7 +115,7 @@ void *ErrorCorrection_Thread( void *arg )
 
 inline double GetBound( int c )
 {
-	return c * ERROR_RATE  + 6.0 * sqrt( c * ERROR_RATE ) + 1 ;
+	return c * ERROR_RATE  + 6.0 * sqrt( c  * ERROR_RATE ) + 1 ;
 }
 
 int InferPosThreshold( KmerCode &kcode, Store &kmers, int direction, int upperBound ) // -1:left, 1:right
@@ -146,6 +149,31 @@ int InferPosThreshold( KmerCode &kcode, Store &kmers, int direction, int upperBo
 		return upperBound ;
 }
 
+bool TestExtend( int t, KmerCode kcode, int depth, int direction, Store &kmers )
+{
+	int i ;
+	KmerCode tmpKcode( kcode ) ;
+	if ( depth <= 0 )
+		return true ;
+
+	for ( i = 0 ; i < 4 ; ++i )
+	{
+		tmpKcode = kcode ;
+		if ( direction == 1 )
+			tmpKcode.Append( numToNuc[i] ) ;
+		else
+			tmpKcode.Prepend( numToNuc[i] ) ;
+#ifdef DEBUG
+		printf( "%s %d %d: %d\n", __func__, i, depth, kmers.GetCount( tmpKcode ) ) ;
+#endif
+		if ( kmers.GetCount( tmpKcode ) < t )
+			continue ;	
+		if ( TestExtend( t, tmpKcode, depth - 1 , direction, kmers ) )
+			return true ;
+	}
+	return false ;
+}
+
 // Return how many possible candidates
 void SearchPaths_Right( int start, int to, int pos, int t, bool isPaired, char *seq, int fixCnt, int *fix, int fixBottleNeck,
 	int &maxFixCnt, int *bestFix, int &bestFixCnt, int &bestFixBottleNeck, int top2FixBottleNeck[], bool isStrongTrusted[], bool isPolyAKmer[],
@@ -176,6 +204,22 @@ void SearchPaths_Right( int start, int to, int pos, int t, bool isPaired, char *
 
 	if ( pos >= to )
 	{
+		if ( seq[pos] == '\0' )
+		{
+			/*int teThreshold = ( t < fixBottleNeck ? t : fixBottleNeck ) ;
+			int tmp = teThreshold ;
+			teThreshold = teThreshold - 2 * sqrt( teThreshold ) ;
+			if ( teThreshold < tmp / 2 )
+				teThreshold = tmp / 2  ;
+			if ( teThreshold < 1 )
+				teThreshold = 1 ;*/
+			//if ( !TestExtend( 1, kcode, 1, 1, kmers ) ) 
+			//	return ;
+		}
+		
+		if ( fixBottleNeck < t )
+			++fixCnt ;
+
 		if ( fixCnt < maxFixCnt )
 		{
 			top2FixBottleNeck[0] = fixBottleNeck ;
@@ -243,7 +287,7 @@ void SearchPaths_Right( int start, int to, int pos, int t, bool isPaired, char *
 					maxFixCnt, bestFix, bestFixCnt, bestFixBottleNeck, top2FixBottleNeck, isStrongTrusted, isPolyAKmer, tmpKcode, kmers,
 					trialCnt ) ;		
 		}
-		else if ( threshold == 1 ) 
+		else if ( threshold == 1 && t <= 2 ) 
 		{
 			// See if it is accidentally below the threshold, by jumping
 			int j, k = 0 ;
@@ -264,7 +308,7 @@ void SearchPaths_Right( int start, int to, int pos, int t, bool isPaired, char *
 				++extension ;
 				tmpBottleNeck = fixBottleNeck ;
 				//tmpKcode.Prepend( 'A' ) ;
-				SearchPaths_Right( start, to, i + 1, t, isPaired, seq, fixCnt, fix, tmpBottleNeck,
+				SearchPaths_Right( start, to, i + 1, t, isPaired, seq, fixCnt + 1, fix, tmpBottleNeck,
 					maxFixCnt, bestFix, bestFixCnt, bestFixBottleNeck, top2FixBottleNeck, isStrongTrusted, isPolyAKmer, tmpKcode, kmers,
 					trialCnt ) ;
 			}
@@ -400,6 +444,22 @@ void SearchPaths_Left( int start, int to, int pos, int t, bool isPaired, char *s
 		return ;
 	if ( pos < to )
 	{
+		if ( pos <= -1 )
+		{
+			/*int teThreshold = ( t < fixBottleNeck ? t : fixBottleNeck ) ;
+			int tmp = teThreshold ;
+			teThreshold = teThreshold - 2 * sqrt( teThreshold ) ;
+			if ( teThreshold < tmp / 2 )
+				teThreshold = tmp / 2  ;
+			if ( teThreshold < 1 )
+				teThreshold = 1 ;*/
+			//if ( !TestExtend( 1, kcode, 3, -1, kmers ) ) 
+			//	return ;
+		}
+		
+		if ( fixBottleNeck < t )
+			++fixCnt ;
+		
 		if ( fixCnt < maxFixCnt )
 		{
 			top2FixBottleNeck[0] = fixBottleNeck ;
@@ -451,7 +511,7 @@ void SearchPaths_Left( int start, int to, int pos, int t, bool isPaired, char *s
 		tmpKcode.Prepend( seq[pos] ) ;	
 		cnt = kmers.GetCount( tmpKcode ) ; 
 #ifdef DEBUG
-		printf( "left: %d %d %c=>%c (%d, %d)\n", fixCnt, pos, seq[pos], seq[pos], cnt, bestFixBottleNeck ) ;
+		printf( "left: %d %d %c=>%c (%d[%d], %d)\n", fixCnt, pos, seq[pos], seq[pos], cnt, threshold, bestFixBottleNeck ) ;
 #endif
 		if ( cnt >= threshold ) 
 		{
@@ -464,7 +524,7 @@ void SearchPaths_Left( int start, int to, int pos, int t, bool isPaired, char *s
 					maxFixCnt, bestFix, bestFixCnt, bestFixBottleNeck, top2FixBottleNeck, isStrongTrusted, isPolyAKmer, tmpKcode, kmers, 
 					trialCnt ) ;		
 		}
-		else if ( threshold == 1 ) 
+		else if ( threshold == 1 && t <= 2 ) 
 		{
 			// See if it is accidentally below the threshold
 			int j, k = 0 ;
@@ -483,7 +543,7 @@ void SearchPaths_Left( int start, int to, int pos, int t, bool isPaired, char *s
 					fix[j] = -1 ;
 				tmpBottleNeck = fixBottleNeck ;
 				++extension ;
-				SearchPaths_Left( start, to, i - 1, threshold, isPaired, seq, fixCnt, fix, tmpBottleNeck,
+				SearchPaths_Left( start, to, i - 1, threshold, isPaired, seq, fixCnt + 1, fix, tmpBottleNeck,
 					maxFixCnt, bestFix, bestFixCnt, bestFixBottleNeck, top2FixBottleNeck, isStrongTrusted, 
 					isPolyAKmer, tmpKcode, kmers, trialCnt ) ;
 			}
@@ -509,7 +569,7 @@ void SearchPaths_Left( int start, int to, int pos, int t, bool isPaired, char *s
 				++trialCnt ;
 
 #ifdef DEBUG
-				printf( "left: %d %d %c=>%c (%d, %d)\n", fixCnt, pos, seq[pos], c[i], cnt, bestFixBottleNeck ) ;
+				printf( "left: %d %d %c=>%c (%d[%d], %d)\n", fixCnt, pos, seq[pos], c[i], cnt, threshold, bestFixBottleNeck ) ;
 #endif
 				if ( nucToNum[ seq[pos] - 'A' ] != -1 )
 					++tmpFixCnt ;
@@ -605,6 +665,7 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 	int readLength ; 
 	int counts[MAX_READ_LENGTH] ;
 	int iBuffer[MAX_READ_LENGTH], fix[MAX_READ_LENGTH] ;
+	double dBuffer[MAX_READ_LENGTH] ;
 	bool isStrongTrusted[MAX_READ_LENGTH] ; 
 	bool isPolyAKmer[MAX_READ_LENGTH] ;
 	int tstart, tend, longestTrustedLength, trustThreshold ;
@@ -615,6 +676,7 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 	int strongTrustThreshold ;
 	bool unfixable, forceNextRound ;
 	bool isPaired ;
+	bool flag ;
 
 	struct _segmentInfo segmentInfo[MAX_READ_LENGTH], trustedIsland[MAX_READ_LENGTH] ;
 	int segmentInfoCnt = 0, trustedIslandCnt = 0 ;
@@ -630,7 +692,7 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 
 	//printf( "\n",seq ) ;
 	readLength = i ;
-	allowedFix = readLength * MAX_FIX_PER_100 / 100 ;	
+	allowedFix = readLength ;//* MAX_FIX_PER_100 / 100 ;	
 	unfixable = false ;
 	
 	isPaired = pairStrongTrustThreshold == -1 ? false : true ;
@@ -688,12 +750,19 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 		if ( iBuffer[i] > 2 * iBuffer[i - 1]  && iBuffer[i] > 10 ) 
 			break ;
 	}
+
+	flag = false ;
 	if ( i >= 1 )
 	//if ( i < kcnt )
 	{
 		//trustThreshold = iBuffer[( kcnt - 1 + i ) / 2] / 20 + 1 ;
 		trustThreshold = GetBound( iBuffer[i] ) ;
 		strongTrustThreshold = iBuffer[i] ;
+		if ( strongTrustThreshold >= 20 && iBuffer[i - 1] == 2 && trustThreshold < 3 )
+		{
+			flag = true ;
+			trustThreshold = 3 ;
+		}
 		//trustThreshold = iBuffer[kcnt / 2] - 4 * sqrt( iBuffer[i] ) ;
 	}
 	else
@@ -709,7 +778,8 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 
 	if ( pairStrongTrustThreshold >= 1 && strongTrustThreshold > pairStrongTrustThreshold )
 	{
-		trustThreshold = GetBound( pairStrongTrustThreshold ) ;
+		if ( flag == false || pairStrongTrustThreshold < 20 )
+			trustThreshold = GetBound( pairStrongTrustThreshold ) ;
 		strongTrustThreshold = pairStrongTrustThreshold ;
 	}
 	for ( i = 0 ; i < kcnt ; ++i )
@@ -747,14 +817,17 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 	int iter = 0 ;
 	while ( 1 )
 	{
-		allowedFix = readLength * MAX_FIX_PER_100 / 100 ;
+		allowedFix = readLength ;//* MAX_FIX_PER_100 / 100 ;
 		totalFix = 0 ;
 		unfixable = false ;
 		forceNextRound = false ;
 		// Find the longest trusted portion
+		trustedIslandCnt = 0 ;
 		longestTrustedLength = -1 ;
 		j = 0 ;
 		memset( isStrongTrusted, false, sizeof( bool ) * readLength ) ;
+		for ( i = 0 ; i < readLength ; ++i )
+			iBuffer[i] = -1 ;
 		for ( i = 0 ; i < kcnt ; ++i )
 		{
 			//int t = 7 ;
@@ -777,10 +850,17 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 				if ( j >= 2 )
 				{
 					//printf( "%d %d: %d %d\n", i, j, i - j, i - 1 + kmerLength - 1 ) ;
-					for ( k = i - j ; k <= i - 1 + kmerLength - 1 ; ++k )
+					/*for ( k = i - j ; k <= i - 1 + kmerLength - 1 ; ++k )
 					{
-						isStrongTrusted[k] = true ;
-					}
+						if ( iBuffer[k] == -1 )
+							isStrongTrusted[k] = true ;
+						else
+							isStrongTrusted[k] = false ;
+						//iBuffer[k] = i - j ; 
+					}*/
+					trustedIsland[ trustedIslandCnt ].from = i - j ;
+					trustedIsland[ trustedIslandCnt ].to = i - 1 ;
+					++trustedIslandCnt ;
 				}
 				/*if ( IsPolyA( seq + i, kmerLength ) )
 				{
@@ -798,11 +878,62 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 		}
 		if ( j >= 2 )
 		{
-			for ( k = i - j ; k <= i - 1 + kmerLength - 1 ; ++k )
+			/*for ( k = i - j ; k <= i - 1 + kmerLength - 1 ; ++k )
 			{
-				isStrongTrusted[k] = true ;
+				if ( iBuffer[k] == -1 )
+					isStrongTrusted[k] = true ;
+				else
+					isStrongTrusted[k] = false ;
+				//iBuffer[k] = i - j ; 
+			}*/
+			trustedIsland[ trustedIslandCnt ].from = i - j ;
+			trustedIsland[ trustedIslandCnt ].to = i - 1 ;
+			++trustedIslandCnt ;
+		}
+
+		// Adjust the boundary of trusted kmer islands
+		for ( i = 1 ; i < trustedIslandCnt ; ++i )
+		{
+			if ( trustedIsland[i].from <= trustedIsland[i - 1].to + kmerLength - 1 + 1 )	
+			{
+				int len1 = trustedIsland[i - 1].to - trustedIsland[i - 1].from ;
+				int len2 = trustedIsland[i].to - trustedIsland[i].from ;
+
+				int overlap = trustedIsland[i - 1].to + kmerLength - 1 + 1 - trustedIsland[i].from ;
+				//printf( "%d\n", overlap ) ;
+				// check the count between them
+				for ( j = trustedIsland[i - 1].to + 1 ; j < trustedIsland[i].from ; ++j )
+				{
+					if ( counts[j] <= 2 && counts[j] < trustThreshold )
+						break ;
+				}
+
+				if ( j >= trustedIsland[i].from )
+					continue ;
+				if ( overlap > 3 )
+					continue ;
+
+				if ( len1 < len2 )
+				{
+					// change the i-1 island
+					trustedIsland[i - 1].to -= ( overlap + 1 ) ;
+				}
+				else
+				{
+					trustedIsland[i].from += ( overlap + 1 ) ;
+				}
 			}
 		}
+
+		// Set trusted positions
+		for ( i = 0 ; i < trustedIslandCnt ; ++i )
+		{
+			if ( trustedIsland[i].from > trustedIsland[i].to )
+				continue ;
+			for ( j = trustedIsland[i].from ; j <= trustedIsland[i].to + kmerLength - 1 ; ++j )
+				isStrongTrusted[j] = true ;
+		}
+		
 	
 		trustedIslandCnt = 0 ;
 		j = -1 ;
@@ -954,7 +1085,11 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 			for ( k = 0 ; k < segmentInfoCnt ; ++k )
 			{
 				trialCnt = 0 ;
-				maxFixCnt = allowedFix ;
+				maxFixCnt = ( segmentInfo[k].to - segmentInfo[k].from + 1 ) * MAX_FIX_PER_K / kmerLength * 2 + 1 ; //allowedFix ;
+				//printf( "%d %d %d %d\n", segmentInfo[k].from, segmentInfo[k].to, MAX_FIX_PER_K, maxFixCnt ) ;
+				if ( maxFixCnt < MAX_FIX_PER_K )
+					maxFixCnt = MAX_FIX_PER_K ;
+
 				fixBottleNeck = 1000000000 ;
 				int tmpBestFixBottleNeck = -1 ;
 
@@ -984,7 +1119,7 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 							isPolyAKmer, kcode, kmers, trialCnt ) ;
 				}
 				//printf( "%d\n", tmpBestFixBottleNeck ) ;
-				if ( bestFixBottleNeck == -1 )
+				if ( tmpBestFixBottleNeck == -1 )
 					continue ; // ignore a bad segment.
 
 				if ( tmpBestFixBottleNeck < bestFixBottleNeck )
@@ -1032,6 +1167,7 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 				forceNextRound = true ;
 			}
 
+			//printf( "%d %lf %d\n", bestFixBottleNeck, GetBound( strongTrustThreshold ), forceNextRound  ) ;
 			/*if ( maxFixCnt == 0 && bestFixBottleNeck < strongTrustThreshold && bestFixBottleNeck >= GetBound( strongTrustThreshold )  
 				&& readLength - tend - kmerLength > kmerLength )
 			{
@@ -1049,7 +1185,6 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 			else if ( bestFixCnt <= 0 )
 				unfixable = true ;
 		}
-
 		if ( totalFix == 0 && forceNextRound )
 			return 0 ;
 		//printf( "totalFix=%d\n", totalFix ) ;
@@ -1088,6 +1223,12 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 				if ( iBuffer[i] < strongTrustThreshold )
 					break ;
 			}
+			else if ( iBuffer[i - 1] == 0 && iBuffer[i] >= 5 )
+			{
+				hasDrop = true ;
+				if ( iBuffer[i] < strongTrustThreshold )
+					break ;
+			}
 		}
 		if ( hasDrop )
 		{
@@ -1102,8 +1243,8 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 			//fflush( stdout ) ;
 		}
 		else
-			//break ;
-			return -1 ;
+			break ;
+			//return -1 ;
 	}
 	
 	//printf( "totalFix=%d\n", totalFix ) ;
@@ -1129,30 +1270,67 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 	// then, they are not errors.
 	for ( i = 1 ; i < cnt ; ++i )
 	{
+		if ( qual[0] != '\0' && ( qual[ iBuffer[i] ] <= badQualityThreshold && qual[ iBuffer[i - 1] ] <= badQualityThreshold ) )
+			continue ;
 		if ( iBuffer[i] - iBuffer[i - 1] + 1 <= kmerLength )
 		{
 			//printf( "%d %d\n", counts[ iBuffer[i - 1]], counts[ iBuffer[i] ] ) ;
-			int taga = iBuffer[i - 1] ;
-			int tagb = iBuffer[i] ;
+			j = iBuffer[i - 1] - kmerLength + 1 ;
+			int minSingle = INF ;
+			int minDouble = INF ;
+			int taga = -1, tagb = -1 ;
 
-			if ( i + 1 < cnt && iBuffer[i + 1] <= tagb + kmerLength - 1 )
-				continue ;
-		
-			if ( taga >= kcnt )
+			if ( j < 0 )
+				j = 0 ;
+			for ( ; j < kcnt ; ++j )
 			{
-				taga = tagb - kmerLength ;
-				if ( i >= 2 && iBuffer[i - 2] >= taga )
+				if ( i >= 2 && j <= iBuffer[i - 2] )
 					continue ;
+				if ( i < cnt - 1 && j + kmerLength - 1 >= iBuffer[i + 1] )
+					break ;
+
+				if ( j + kmerLength - 1 >= iBuffer[i] )
+					break ;
+				if ( counts[j] < minSingle )
+				{
+					minSingle = counts[j] ;
+					taga = j ;
+				}
 			}
-			
-			if ( tagb >= kcnt )
+
+			for ( ; j < kcnt ; ++j )
 			{
-				tagb= kcnt - 1 ;
+				if ( i < cnt - 1 && j + kmerLength - 1 >= iBuffer[i + 1] )
+					break ;
+				if ( j > iBuffer[i - 1] )
+					break ;
+				if ( counts[j] < minDouble )
+				{
+					minDouble = counts[j] ;
+					tagb = j ;
+				}
 			}
+		
+			for ( ; j < kcnt ; ++j )
+			{
+				if ( i < cnt - 1 && j + kmerLength - 1 >= iBuffer[i + 1] )
+					break ;
+
+				if ( j > iBuffer[i] )
+					break ;
+				if ( counts[j] < minSingle )
+				{
+					minSingle = counts[j] ;
+					taga = j ;
+				}
+			}
+
+
 #ifdef DEBUG
 			printf( "%d(%d) %d(%d): %d %d\n", taga, iBuffer[i - 1], tagb, iBuffer[i], counts[taga], counts[tagb] ) ;
 #endif
-			if ( counts[ taga ] > 1 &&
+			if ( 	minSingle != INF && minDouble != INF &&
+				counts[ taga ] > 1 &&
 				counts[ tagb ] > 1 &&
 				counts[ taga ] > counts[ tagb ] / 2 &&
 				counts[ taga ] < 2 * counts[ tagb ] ) 
@@ -1187,7 +1365,7 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 	{
 		int tmp = 0 ;
 		for ( i = 0 ; i < 10 ; ++i )
-			if ( fix[i] != -1 && seq[i] != 'N' )
+			if ( fix[i] != -1 && seq[i] != 'N' && qual[i] > badQualityThreshold )
 				++tmp ; 
 		if ( tmp >= 2 )
 			for ( i = 0 ; i < 10 ; ++i )
@@ -1198,7 +1376,7 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 
 		tmp = 0 ;
 		for ( i = readLength - 10 ; i < readLength ; ++i )
-			if ( fix[i] == -1 && seq[i] != 'N' )
+			if ( fix[i] != -1 && seq[i] != 'N' && qual[i] > badQualityThreshold )
 				++tmp ; 
 		if ( tmp >= 3 )
 			for ( i = readLength - 10 ; i < readLength ; ++i )
@@ -1210,20 +1388,26 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 
 	if ( totalFix >= MAX_FIX_PER_K )
 	{
-		iBuffer[0] = 0 ;
+		dBuffer[0] = 0 ;
 		for ( i = 0 ; i < readLength ; ++i )
 			if ( seq[i] != 'N' && fix[i] != -1 )
-				iBuffer[i + 1] = iBuffer[i] + 1 ;
+			{
+				if ( qual[i] > badQualityThreshold )
+					dBuffer[i + 1] = dBuffer[i] + 1 ;
+				else
+					dBuffer[i + 1] = dBuffer[i] + 0.5 ;
+			}
 			else
-				iBuffer[i + 1] = iBuffer[i] ;
+				dBuffer[i + 1] = dBuffer[i] ;
 
 		for ( i = 0 ; i < kcnt ; ++i )
 		{
 			int threshold = MAX_FIX_PER_K ;
 			// Allowing slightly more on the 3' end
-			if ( i > 0.7 * readLength )
-				++threshold ;
-			if ( iBuffer[i + kmerLength] - iBuffer[i] > threshold )
+			//if ( i > 0.7 * readLength )
+			//	++threshold ;
+
+			if ( dBuffer[i + kmerLength] - dBuffer[i] > threshold )
 				return -1 ;
 		}
 

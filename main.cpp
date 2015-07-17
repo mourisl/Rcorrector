@@ -24,6 +24,7 @@ bool agressiveCorrection ;
 int MAX_FIX_PER_100 ;
 int MAX_FIX_PER_K ;
 double ERROR_RATE ;
+char badQualityThreshold ; // quality <= this is bad
 
 struct _summary
 {
@@ -72,9 +73,51 @@ void UpdateSummary( int corCnt, struct _summary &summary )
 
 void PrintSummary( const struct _summary &summary )
 {
-	printf( "Processed %" PRIu64 " reads\n"
+	fprintf( stderr, "Processed %" PRIu64 " reads\n"
 		"\tCorrected %" PRIu64 " bases.\n",
 		summary.totalReads, summary.totalCorrections ) ;
+}
+
+char GetBadQuality( Reads &reads )
+{
+	int i ;
+	int qualHisto[300], firstQualHisto[300] ;
+	int totalCnt, cnt ;
+	int t1, t2 ;
+	//Reads reads( readFile ) ;
+	if ( !reads.HasQuality() )
+		return 0 ;
+
+	memset( qualHisto, 0, sizeof( qualHisto ) ) ;
+	memset( firstQualHisto, 0, sizeof( firstQualHisto )) ;
+	for ( i = 0 ; i < 1000000 ; ++i )
+	{
+		if ( !reads.Next() )
+			break ;
+		++qualHisto[ (int)reads.qual[ strlen( reads.seq ) - 1 ] ] ;
+		++firstQualHisto[ (int)reads.qual[0] ] ;
+	}
+
+	totalCnt = i ;
+	cnt = 0 ;
+	for ( i = 0 ; i < 300 ; ++i )
+	{
+		cnt += firstQualHisto[i] ;
+		if ( cnt > totalCnt * 0.05 )
+			break ;
+	}
+	t1 = i - 1 ;
+	
+	cnt = 0 ;
+	for ( i = 0 ; i < 300 ; ++i )
+	{
+		cnt += qualHisto[i] ;
+		if ( cnt > totalCnt * 0.05 )
+			break ;
+	}
+	t2 = i ;
+	//printf( "%d %d\n", t1, t2 ) ;
+	return (char)( t2 < t1 ? t2 : t1 ) ;
 }
 
 int main( int argc, char *argv[] )
@@ -127,6 +170,7 @@ int main( int argc, char *argv[] )
 		{
 			mkdir( argv[i + 1], 0700 ) ;
 			reads.SetOutputDirectory( argv[i + 1] ) ;
+			pairedReads.SetOutputDirectory( argv[i + 1] ) ;
 			++i ;
 		}
 		else if ( !strcmp( "-c", argv[i] ) )
@@ -154,7 +198,7 @@ int main( int argc, char *argv[] )
 			MAX_FIX_PER_100 = atoi( argv[i + 1] ) ;
 			++i ;
 		}
-		else if ( !strcmp( "-maxcor", argv[i] ) )
+		else if ( !strcmp( "-maxcorK", argv[i] ) )
 		{
 			MAX_FIX_PER_K = atoi( argv[i + 1] ) ;
 			++i ;
@@ -279,6 +323,11 @@ int main( int argc, char *argv[] )
 	free( rates ) ;
 	//printf( "%lf\n", ERROR_RATE ) ;
 	//exit ( 1 ) ;
+
+	// Get the bad quality screo
+	reads.Rewind() ;
+	badQualityThreshold = GetBadQuality( reads ) ;
+	fprintf( stderr, "Bad quality threshold is %c\n", badQualityThreshold ) ;
 
 	// Scan the reads to get the information of the kmers.
 	reads.Rewind() ;
