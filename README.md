@@ -41,7 +41,7 @@ For each input file specified by "-r" or "-p", Rcorrector will generate the corr
 
 
 ### Example
-perl run_rcorrector.pl -p frag_1.fq frag_2.fq  
+perl run_rcorrector.pl -1 frag_1.fq -2 frag_2.fq  
 
 ### Contact
 lsong10@jhu.edu
