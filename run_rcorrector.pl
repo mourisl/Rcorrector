@@ -4,6 +4,7 @@ use strict ;
 use Cwd 'cwd' ;
 use Cwd 'abs_path' ;
 use File::Basename;
+use Digest::MD5  qw(md5 md5_hex md5_base64) ;
 
 my $i ;
 my @readFileList ;
@@ -11,6 +12,7 @@ my $numOfThread = 1 ;
 my $kmerSize = 23 ;
 my $bloomFilterSize = 100000000 ;
 my $WD = dirname( abs_path( $0 ) ) ;
+my $stage = 0 ;
 
 my $usage = "Usage: perl ./run_rcorrector.pl [OPTIONS]\n".
 		"OPTIONS:\n".
@@ -25,6 +27,11 @@ my $usage = "Usage: perl ./run_rcorrector.pl [OPTIONS]\n".
 		#"\t-trim allow trimming (default: false)\n".
 		"\t-maxcorK INT: the maximum number of correction within k-bp window (default: 4)\n".
 		"\t-ek expected_number_of_kmers: does not affect the correctness of program but affect the memory usage (default: 100000000)"; 
+		"\t-stage INT: start from which stage (default: 0)\n".
+		"\t\t0-start from begining(storing kmers in bloom filter);\n".
+		"\t\t1-start from count kmers showed up in bloom filter;\n".
+		"\t\t2-start from dumping kmer counts into a jf_dump file;\n".
+		"\t\t3-start from error correction.\n" ;
 
 if ( scalar( @ARGV ) == 0 )
 {
@@ -144,6 +151,11 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 
 		++$i ;
 	}
+	elsif ( $ARGV[$i] eq "-stage" )
+	{
+		$stage = $ARGV[$i + 1] ;
+		++$i ;
+	}
 	else
 	{
 		die "Unknown argument ".$ARGV[$i]."\n" ;
@@ -164,7 +176,6 @@ for ( my $i = 0 ; $i < @firstMateFileList ; ++$i )
 	$fileArguments = $fileArguments." -p ".$firstMateFileList[$i]." ".$secondMateFileList[$i] ;
 }
 
-print( "Count the kmers\n" ) ;
 
 # build the file list for jellyfish
 my $jellyfishFiles = "" ;
@@ -178,17 +189,34 @@ for ( my $i = 0 ; $i < @gzippedFileList ; ++$i )
 	$jellyfishFiles .= "<(gzip -cd ".$gzippedFileList[$i].") " ;
 }
 
-print( "$WD/jellyfish-2.1.3/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp.bc $jellyfishFiles\n" ) ;
-system( "bash -c \"$WD/jellyfish-2.1.3/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp.bc $jellyfishFiles\"" ) ;
-print( "$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp.bc -o tmp.mer_counts $jellyfishFiles\n" ) ;
-system( "bash -c \"$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp.bc -o tmp.mer_counts $jellyfishFiles\"" ) ;
+my $crc = md5_hex( $jellyfishFiles ) ;
 
-print( "Dump the kmers\n" ) ;
-print( "$WD/jellyfish-2.1.3/bin/jellyfish dump -L 2 tmp.mer_counts > tmp.jf_dump\n" ) ;
-system( "$WD/jellyfish-2.1.3/bin/jellyfish dump -L 2 tmp.mer_counts > tmp.jf_dump" ) ;
+if ( $stage <= 0 )
+{
+	print( "Put the kmers into bloom filter\n" ) ;
+	print( "$WD/jellyfish-2.1.3/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\n" ) ;
+	die "Failed at stage 0.\n" if ( system( "bash -c \"$WD/jellyfish-2.1.3/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\"" ) != 0 ) ;
+}
 
-print( "Error correction\n" ) ;
-print( "$WD/rcorrector @rcorrectorArguments $fileArguments -c tmp.jf_dump\n" ) ;
-system( "$WD/rcorrector @rcorrectorArguments $fileArguments -c tmp.jf_dump" ) ;
+if ( $stage <= 1 )
+{
+	print( "Count the kmers showed up in the bloom filter\n" ) ;
+	print( "$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\n" ) ;
+	die "Failed at stage 1.\n" if ( system( "bash -c \"$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\"" ) != 0 ) ;
+}
 
-#system( "rm tmp.bc tmp.mer_counts tmp.jf_dump" );
+if ( $stage <= 2 )
+{
+	print( "Dump the kmers\n" ) ;
+	print( "$WD/jellyfish-2.1.3/bin/jellyfish dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump\n" ) ;
+	die "Failed at stage 2.\n" if ( system( "$WD/jellyfish-2.1.3/bin/jellyfish dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump" ) != 0 )
+}
+
+if ( $stage <= 3 )
+{
+	print( "Error correction\n" ) ;
+	print( "$WD/rcorrector @rcorrectorArguments $fileArguments -c tmp_$crc.jf_dump\n" ) ;
+	die "Failed at stage 3.\n" if ( system( "$WD/rcorrector @rcorrectorArguments $fileArguments -c tmp_$crc.jf_dump" ) != 0 ) ;
+}
+
+system( "rm tmp_$crc.bc tmp_$crc.mer_counts tmp_$crc.jf_dump" );
