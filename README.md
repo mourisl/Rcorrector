@@ -41,7 +41,9 @@ For each input file specified by "-r" or "-p", Rcorrector will generate the corr
 
 
 ### Example
-perl run_rcorrector.pl -1 frag_1.fq -2 frag_2.fq  
+We put a small sample data set, you can run them by:
+
+perl run_rcorrector.pl -1 Sample/sample_read1.fq -2 Sample/sample_read2.fq  
 
 ### Contact
 lsong10@jhu.edu
