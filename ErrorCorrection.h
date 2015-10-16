@@ -16,6 +16,8 @@ struct _ErrorCorrectionThreadArg
 	struct _Read *readBatch, *readBatch2 ;
 	int batchSize ;
 	int batchUsed ;
+
+	bool interleaved ;
 	
 	pthread_mutex_t *lock ;
 } ;
