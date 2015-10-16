@@ -13,6 +13,7 @@
 #define COMPRESSED_FILE 1
 
 extern bool zlibVersionChecked ; 
+extern bool outputStdout ;
 
 class File
 {
@@ -39,6 +40,13 @@ public:
 	void Open( char *fileName, const char *mode )
 	{
 		opened = true ;
+
+		if ( outputStdout && mode[0] == 'w' )
+		{
+			type = UNCOMPRESSED_FILE ;
+			fp = stdout ;
+			return ;
+		}
 		// Test it is gz or normal file by looking at the last to bit
 		int len = strlen( fileName ) ;
 		if ( fileName[len - 2] == 'g' && fileName[len - 1] == 'z' )

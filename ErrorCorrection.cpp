@@ -76,11 +76,16 @@ void *ErrorCorrection_Thread( void *arg )
 	struct _ErrorCorrectionThreadArg *myArg = ( struct _ErrorCorrectionThreadArg *)arg ; 	
 	
 	KmerCode kcode( myArg->kmerLength ) ;
+	int increment = 1 ;
+	if ( myArg->interleaved )
+	{
+		increment = 2 ;
+	}
 	while ( 1 )
 	{
 		pthread_mutex_lock( myArg->lock ) ;
 		ind = myArg->batchUsed ;
-		++myArg->batchUsed ;
+		myArg->batchUsed += increment ;
 		pthread_mutex_unlock( myArg->lock ) ;
 		//printf( "%d %d\n", ind, myArg->batchSize ) ;
 		if ( ind >= myArg->batchSize )
@@ -88,10 +93,14 @@ void *ErrorCorrection_Thread( void *arg )
 		//correction = ErrorCorrection_Wrapper( myArg->readBatch[ind].seq, kmerCode, myArg->kmers, 
 		//		badPrefix, badSuffix ) ;
 		int t = -1, t1 = -1, t2 = -1 ;
-		if ( myArg->readBatch2 != NULL )
+		if ( myArg->readBatch2 != NULL || myArg->interleaved )
 		{
 			t1 = GetStrongTrustedThreshold( myArg->readBatch[ind].seq, myArg->readBatch[ind].qual, kcode, *myArg->kmers ) ;
-			t2 = GetStrongTrustedThreshold( myArg->readBatch2[ind].seq, myArg->readBatch2[ind].qual, kcode, *myArg->kmers ) ;
+			
+			if ( myArg->readBatch2 != NULL )
+				t2 = GetStrongTrustedThreshold( myArg->readBatch2[ind].seq, myArg->readBatch2[ind].qual, kcode, *myArg->kmers ) ;
+			else if ( myArg->interleaved )
+				t2 = GetStrongTrustedThreshold( myArg->readBatch[ind + 1].seq, myArg->readBatch[ind + 1].qual, kcode, *myArg->kmers ) ;
 			t = ( t1 < t2 ) ? t1 : t2 ;
 		}
 
@@ -106,6 +115,13 @@ void *ErrorCorrection_Thread( void *arg )
 			myArg->readBatch2[ind].correction = correction ;
 			myArg->readBatch2[ind].badPrefix = 0 ;
 			myArg->readBatch2[ind].badSuffix = 0 ;
+		}
+		if ( myArg->interleaved )
+		{
+			correction = ErrorCorrection( myArg->readBatch[ind + 1].seq, myArg->readBatch[ind + 1].qual, t, kcode, *myArg->kmers ) ;
+			myArg->readBatch[ind + 1].correction = correction ;
+			myArg->readBatch[ind + 1].badPrefix = 0 ;
+			myArg->readBatch[ind + 1].badSuffix = 0 ;
 		}
 	}
 
