@@ -27,13 +27,20 @@ Rcorrector can also be applied to other type of sequencing data where the read c
 		-s seq_files: comma separated files for single-end data sets
 		-1 seq_files_left: comma separated files for the first mate in the paried-end data sets
 		-2 seq_files_right: comma separated files for the second mate in the paired-end data sets
+		-i seq_files_interleaved: comma sperated files for interleaved paired-end data sets
 		Optional
 		-k INT: kmer_length (default: 23)
 		-od STRING: output_file_directory (default: ./)
 		-t INT: number of threads to use (default: 1)
 		-trim : allow trimming (default: false)
 		-maxcorK INT: the maximum number of correction within k-bp window (default: 4)
-		-ek INT: expected number of kmers; does not affect the correctness of program but affects the memory usage (default: 100000000); 
+		-ek INT: expected number of kmers; does not affect the correctness of program but affects the memory usage (default: 100000000)
+		-stdout: output the corrected reads to stdout (default: not used)
+		-stage INT: start from which stage (default: 0)
+			0-start from begining(storing kmers in bloom filter) ;
+			1-start from count kmers showed up in bloom filter;
+			2-start from dumping kmer counts into a jf_dump file;
+			3-start from error correction.
 
 
 ### Output

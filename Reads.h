@@ -27,6 +27,7 @@ class Reads
 		File outputFp[MAX_READ_FILE] ;
 		int FILE_TYPE[MAX_READ_FILE] ; // 0-FASTA, 1-FASTQ
 		bool paired[MAX_READ_FILE] ;
+		bool interleaved[MAX_READ_FILE] ;
 		int fpUsed ;
 		int currentFpInd ;
 		char outputDirectory[256] ;
@@ -102,7 +103,7 @@ class Reads
 			compressLevel = cl ;
 		}
 
-		void AddReadFile( char *file, bool paired = false )
+		void AddReadFile( char *file, bool paired, bool interleaved )
 		{
 			if ( fpUsed >= MAX_READ_FILE )
 			{
@@ -154,6 +155,7 @@ class Reads
 			outputFp[ fpUsed ].Open( buffer, "w" ) ;
 			
 			this->paired[ fpUsed ] = paired ;
+			this->interleaved[ fpUsed ] = interleaved ;
 			++fpUsed ;
 		}
 
@@ -418,6 +420,13 @@ class Reads
 		bool IsPaired()
 		{
 			if ( paired[ currentFpInd ] )
+				return true ;
+			return false ;
+		}
+
+		bool IsInterleaved()
+		{
+			if ( interleaved[ currentFpInd ] )
 				return true ;
 			return false ;
 		}

@@ -26,6 +26,7 @@ int MAX_FIX_PER_K ;
 double ERROR_RATE ;
 char badQualityThreshold ; // quality <= this is bad
 bool zlibVersionChecked = false ;
+bool outputStdout = false ;
 
 struct _summary
 {
@@ -47,11 +48,12 @@ int CompDouble( const void *p1, const void *p2 )
 
 void PrintHelp()
 {
-	printf( "Usage: ./a.out [OPTIONS]\n"
+	fprintf( stderr, "Usage: ./a.out [OPTIONS]\n"
 		"OPTIONS:\n"
 		"Required parameters:\n"
 		"\t-r seq_file: seq_file is the path to the sequence file. Can use multiple -r to specifiy multiple sequence files\n"
 		"\t-p seq_file_left seq_file_right: the paths to the paired-end data set. Can use multiple -p to specifiy multiple sequence files\n"
+		"\t-i seq_file: seq_file is the path to the interleaved mate-pair sequence file. Can use multiple -i\n"
 		"\t-c jf_dump: the kmer counts dumped by JellyFish\n"
 		"\t-k kmer_length\n"
 		"Other parameters:\n"
@@ -61,6 +63,7 @@ void PrintHelp()
 		//"\t-all: output all the reads including those unfixable (default: false)\n"
 		"\t-maxcor INT: the maximum number of correction every 100bp (default: 8)\n" 
 		"\t-maxcorK INT: the maximum number of correction within k-bp window (default: 4)\n"
+		"\t-stdout: output the corrected sequences to stdout (default: not used)\n"
 		) ;
 }
 
@@ -167,6 +170,11 @@ int main( int argc, char *argv[] )
 			i += 2 ;
 			continue ;
 		}
+		else if ( !strcmp( "-i", argv[i] ) )
+		{
+			++i ;
+			continue ;
+		}
 		else if ( !strcmp( "-od", argv[i] ) )
 		{
 			mkdir( argv[i + 1], 0700 ) ;
@@ -179,7 +187,7 @@ int main( int argc, char *argv[] )
 			fpJellyFishDump = fopen( argv[i + 1], "r" ) ;
 			if ( fpJellyFishDump == NULL )
 			{
-				printf( "Could not open file %s\n", argv[i + 1]) ;
+				fprintf( stderr, "Could not open file %s\n", argv[i + 1]) ;
 				exit( 1 ) ;
 			}
 			++i ;
@@ -208,6 +216,10 @@ int main( int argc, char *argv[] )
 		{
 			agressiveCorrection = true ;	
 		}*/
+		else if ( !strcmp( "-stdout", argv[i] ) )
+		{
+			outputStdout = true ;
+		}
 		else if ( !strcmp( "-h", argv[i] ) )
 		{
 			PrintHelp() ;
@@ -215,7 +227,7 @@ int main( int argc, char *argv[] )
 		}
 		else
 		{
-			printf( "Unknown argument: %s\n", argv[i] ) ;
+			fprintf( stderr, "Unknown argument: %s\n", argv[i] ) ;
 			exit( 0 ) ;
 		}
 	}
@@ -225,14 +237,19 @@ int main( int argc, char *argv[] )
 	{
 		if ( !strcmp( "-r", argv[i] ) )
 		{
-			reads.AddReadFile( argv[i + 1 ] ) ;
+			reads.AddReadFile( argv[i + 1 ], false, false ) ;
 			++i;
 		}
 		else if ( !strcmp( "-p", argv[i] ) )
 		{
-			reads.AddReadFile( argv[i + 1], true ) ;
-			pairedReads.AddReadFile( argv[i + 2], true ) ;
+			reads.AddReadFile( argv[i + 1], true, false ) ;
+			pairedReads.AddReadFile( argv[i + 2], true, false ) ;
 			i += 2 ;
+		}
+		else if ( !strcmp( "-i", argv[i] ) )
+		{
+			reads.AddReadFile( argv[i + 1], false, true ) ;
+			++i ;
 		}
 	}
 	
@@ -334,28 +351,42 @@ int main( int argc, char *argv[] )
 	reads.Rewind() ;
 	if ( numOfThreads == 1 )
 	{
-		while ( reads.Next() )
+		struct _Read readBuffer[2] ;
+		while ( reads.NextWithBuffer( readBuffer[0].id, readBuffer[0].seq, readBuffer[0].qual ) )
 		{
-			char *readId = reads.id ;
-			char *seq = reads.seq ;
+			char *readId = readBuffer[0].id ;
+			char *seq = readBuffer[0].seq ;
 			char *qual ;
 			if ( reads.HasQuality() )
-				qual = reads.qual ;
+				qual = readBuffer[0].qual ;
 			else
 				qual = NULL ;
 
 			char *readId2, *seq2, *qual2 ;
 			int t = -1, t1 = -1, t2 = -1 ;
-			if ( reads.IsPaired() )
+			if ( reads.IsPaired() || reads.IsInterleaved() )
 			{
-				pairedReads.Next() ;
-				readId2 = pairedReads.id ;
-				seq2 = pairedReads.seq ;
-				
-				if ( pairedReads.HasQuality() )
-					qual2 = pairedReads.qual ;
-				else
-					qual2 = NULL ;
+				if ( reads.IsPaired() )
+				{
+					pairedReads.Next() ;
+					readId2 = pairedReads.id ;
+					seq2 = pairedReads.seq ;
+					if ( pairedReads.HasQuality() )
+						qual2 = pairedReads.qual ;
+					else
+						qual2 = NULL ;
+				}
+				else if ( reads.IsInterleaved() )
+				{
+					reads.NextWithBuffer( readBuffer[1].id, readBuffer[1].seq, readBuffer[1].qual ) ;	
+					readId2 = readBuffer[1].id ;
+					seq2 = readBuffer[1].seq ;
+					
+					if ( qual != NULL )
+						qual2 = readBuffer[1].qual ;
+					else 
+						qual2 = NULL ;
+				}
 
 				t1 = GetStrongTrustedThreshold( seq, qual, kcode, kmers ) ;
 				t2 = GetStrongTrustedThreshold( seq2, qual2, kcode, kmers ) ;
@@ -372,13 +403,20 @@ int main( int argc, char *argv[] )
 			  if ( ecResult <= 0 )
 			  printf( "%s\n%s\n", readId, seq ) ;*/
 			//printf( "%d\n", ecResult ) ;
-			reads.Output( ecResult, 0, 0, false ) ;
+			readBuffer[0].correction = ecResult ;
+			reads.OutputBatch( &readBuffer[0], 1, false ) ;
 
 			if ( reads.IsPaired() )
 			{
 				ecResult = ErrorCorrection( seq2, qual2, t, kcode, kmers ) ;
 				pairedReads.Output( ecResult, 0, 0, false ) ;
-				
+				UpdateSummary( ecResult, summary ) ;
+			}
+			if ( reads.IsInterleaved() )
+			{
+				ecResult = ErrorCorrection( seq2, qual2, t, kcode, kmers ) ;
+				readBuffer[1].correction = ecResult ; 
+				reads.OutputBatch( &readBuffer[1], 1, false) ;
 				UpdateSummary( ecResult, summary ) ;
 			}
 
@@ -413,7 +451,7 @@ int main( int argc, char *argv[] )
 				int tmp = pairedReads.GetBatch( readBatch2, maxBatchSize, fileInd2, true, true ) ;
 				if ( tmp != batchSize )
 				{
-					printf( "ERROR: The files are not paired!\n" ) ; 
+					fprintf( stderr, "ERROR: The files are not paired!\n" ) ; 
 					exit ( 1 ) ;
 				}
 			}
@@ -422,29 +460,52 @@ int main( int argc, char *argv[] )
 			//printf( "batchSize=%d\n", batchSize ) ;
 			arg.batchSize = batchSize ;
 			arg.batchUsed = 0 ;
+			arg.interleaved = reads.IsInterleaved() ;
 			for ( i = 0 ; i < numOfThreads ; ++i )
 				pthread_create( &threads[i], &pthreadAttr, ErrorCorrection_Thread, (void *)&arg ) ;	
 
 			for ( i = 0 ; i < numOfThreads ; ++i )
 				pthread_join( threads[i], &pthreadStatus ) ;
-
-			reads.OutputBatch( readBatch, batchSize, false, fileInd1 ) ;
-			for ( i = 0 ; i < batchSize ; ++i )
-				UpdateSummary( readBatch[i].correction, summary ) ;
-
-			if ( reads.IsPaired() )
-			{
-				pairedReads.OutputBatch( readBatch2, batchSize, false, fileInd2 ) ;
-				for ( i = 0 ; i < batchSize ; ++i )
-					UpdateSummary( readBatch2[i].correction, summary ) ;
-			}
 			
+			
+			if ( outputStdout )
+			{
+				if ( reads.IsPaired() )
+				{
+					for ( i = 0 ; i < batchSize ; ++i )
+					{
+						reads.OutputBatch( readBatch + i, 1, false, fileInd1 ) ;
+						UpdateSummary( readBatch[i].correction, summary ) ;
+						pairedReads.OutputBatch( readBatch + i, 1, false, fileInd2 ) ;
+						UpdateSummary( readBatch2[i].correction, summary ) ;
+					}
+				}
+				else
+				{
+					reads.OutputBatch( readBatch, batchSize, false, fileInd1 ) ;
+					for ( i = 0 ; i < batchSize ; ++i )
+						UpdateSummary( readBatch[i].correction, summary ) ;
+				}
+			}	
+			else
+			{
+				reads.OutputBatch( readBatch, batchSize, false, fileInd1 ) ;
+				for ( i = 0 ; i < batchSize ; ++i )
+					UpdateSummary( readBatch[i].correction, summary ) ;
+
+				if ( reads.IsPaired() )
+				{
+					pairedReads.OutputBatch( readBatch2, batchSize, false, fileInd2 ) ;
+					for ( i = 0 ; i < batchSize ; ++i )
+						UpdateSummary( readBatch2[i].correction, summary ) ;
+				}
+			}
 		}
 
 		free( readBatch ) ;
 		free( readBatch2 ) ;
 	}
-	
+
 	fclose( fpJellyFishDump ) ;
 
 	PrintSummary( summary ) ;

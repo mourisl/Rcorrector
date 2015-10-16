@@ -20,18 +20,20 @@ my $usage = "Usage: perl ./run_rcorrector.pl [OPTIONS]\n".
 		"\t-s seq_files: comma separated files for single-end data sets\n".
 		"\t-1 seq_files_left: comma separated files for the first mate in the paried-end data sets\n".
 		"\t-2 seq_files_right: comma separated files for the second mate in the paired-end data sets\n".
+		"\t-i seq_files_interleaved: comma sperated files for interleaved paired-end data sets\n".
 		"Other parameters:\n".
 		"\t-k kmer_length (default: 23)\n".
 		"\t-od output_file_directory (default: ./)\n".
 		"\t-t number of threads to use (default: 1)\n".
 		#"\t-trim allow trimming (default: false)\n".
 		"\t-maxcorK INT: the maximum number of correction within k-bp window (default: 4)\n".
-		"\t-ek expected_number_of_kmers: does not affect the correctness of program but affect the memory usage (default: 100000000)"; 
+		"\t-ek expected_number_of_kmers: does not affect the correctness of program but affect the memory usage (default: 100000000)".
+		"\t-stdout: output the corrected reads to stdout (default: not used)\n".
 		"\t-stage INT: start from which stage (default: 0)\n".
 		"\t\t0-start from begining(storing kmers in bloom filter);\n".
 		"\t\t1-start from count kmers showed up in bloom filter;\n".
 		"\t\t2-start from dumping kmer counts into a jf_dump file;\n".
-		"\t\t3-start from error correction.\n" ;
+		"\t\t3-start from error correction." ;
 
 if ( scalar( @ARGV ) == 0 )
 {
@@ -42,6 +44,7 @@ my $fileArguments ;
 my @singleFileList ;
 my @firstMateFileList ;
 my @secondMateFileList ;
+my @interleavedFileList ;
 
 my @rcorrectorArguments ;
 my @gzippedFileList ;
@@ -113,6 +116,17 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 		}
 		++$i ;
 	}
+	elsif ( $ARGV[$i] eq "-i" )
+	{
+		my @cols = split /,/, $ARGV[$i + 1] ;
+		my $j ;
+		for ( $j = 0 ; $j < scalar( @cols ) ; ++$j )
+		{
+			AddJellyFishReadFile( $cols[ $j ] ) ;
+			push @interleavedFileList, $cols[ $j ] ;
+		}
+		++$i ;
+	}
 	elsif ( $ARGV[$i] eq "-t" )
 	{
 		$numOfThread = $ARGV[$i+1] ; 
@@ -151,6 +165,10 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 
 		++$i ;
 	}
+	elsif ( $ARGV[$i] eq "-stdout" )
+	{
+		push @rcorrectorArguments, $ARGV[$i] ;
+	}
 	elsif ( $ARGV[$i] eq "-stage" )
 	{
 		$stage = $ARGV[$i + 1] ;
@@ -176,6 +194,10 @@ for ( my $i = 0 ; $i < @firstMateFileList ; ++$i )
 	$fileArguments = $fileArguments." -p ".$firstMateFileList[$i]." ".$secondMateFileList[$i] ;
 }
 
+for ( my $i = 0 ; $i < @interleavedFileList ; ++$i )
+{
+	$fileArguments = $fileArguments." -i ".$interleavedFileList[$i] ;
+}
 
 # build the file list for jellyfish
 my $jellyfishFiles = "" ;
