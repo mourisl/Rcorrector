@@ -3,7 +3,7 @@ Rcorrector
 
 Described in:
 
-Song, L., Florea, L., Rcorrector: Efficient and accurate error correction for Illumina RNA-seq reads. 2015
+Song, L., Florea, L., [Rcorrector: Efficient and accurate error correction for Illumina RNA-seq reads](http://www.gigasciencejournal.com/content/4/1/48). GigaScience. 2015, 4:48.
 
 Copyright (C) 2012-2013, and GNU GPL, by Li Song and Liliana Florea
 
@@ -44,7 +44,7 @@ Rcorrector can also be applied to other type of sequencing data where the read c
 
 
 ### Output
-For each input file specified by "-r" or "-p", Rcorrector will generate the corresponding output file with "*.cor.fq/fa" in the directory specified by "-od".
+For each input file, Rcorrector will generate the corresponding output file with "*.cor.fq/fa" in the directory specified by "-od".
 
 
 ### Example
