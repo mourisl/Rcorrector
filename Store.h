@@ -5,8 +5,12 @@
 */
 #include <stdio.h>
 #include <stdint.h>
-//#include <tr1/unordered_map>
+
+#if __cplusplus<=199711L
+#include <tr1/unordered_map>
+#else
 #include <unordered_map>
+#endif
 
 #include "KmerCode.h"
 
@@ -15,7 +19,11 @@ class Store
 private:
 	uint64_t size ;
 	//std::map<uint64_t, int> hash ;
+#if __cplusplus<=199711L
+	std::tr1::unordered_map<uint64_t, int> hash ;
+#else
 	std::unordered_map<uint64_t, int> hash ;
+#endif
 
 public:
 	Store()
@@ -24,7 +32,9 @@ public:
 
 	Store( uint64_t cnt )
 	{
+#if __cplusplus>199711L
 		hash.reserve( cnt ) ;
+#endif
 	}
 
 	~Store() 
@@ -33,7 +43,9 @@ public:
 
 	void Allocate( uint64_t cnt )
 	{
+#if __cplusplus>199711L
 		hash.reserve( cnt ) ;
+#endif
 	}
 
 	int Put( KmerCode &code, int cnt  ) 
