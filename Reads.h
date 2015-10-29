@@ -125,7 +125,7 @@ class Reads
 			}
 			else
 			{
-				fprintf( stderr, "\"%s\"'s format is wrong.\n", file ) ;
+				fprintf( stderr, "\"%s\"'s format is wrong: %s\n", file, buffer ) ;
 				exit( 1 ) ;
 			}
 

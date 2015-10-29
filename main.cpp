@@ -278,6 +278,7 @@ int main( int argc, char *argv[] )
 
 	// Read in the kmers from the dump of JellyFish
 	rewind( fpJellyFishDump ) ;*/
+	int kmerCount = 0 ;
 	while ( fscanf( fpJellyFishDump, "%s", buffer ) != EOF )
 	{
 		int count = atoi( &buffer[1] ) ;
@@ -289,7 +290,9 @@ int main( int argc, char *argv[] )
 		for ( i = 0 ; buffer[i] ; ++i )
 			kcode.Append( buffer[i] ) ;
 		kmers.Put( kcode, count ) ;
+		++kmerCount ;
 	}
+	fprintf( stderr, "Stored %d kmers\n", kmerCount ) ;
 
 	srand( 17 ) ;
 
@@ -333,13 +336,12 @@ int main( int argc, char *argv[] )
 		//printf( "%d %d %lf\n", max, secondMax, rates[k] ) ;
 		++k ;
 	}
-		
 	qsort( rates, k, sizeof( rates[0] ), CompDouble ) ;
 	ERROR_RATE = rates[(int)( k * 0.95 )] ;
 	if ( ERROR_RATE == 0 || k < 100 )
 		ERROR_RATE = 0.01 ;
 	free( rates ) ;
-	//printf( "%lf\n", ERROR_RATE ) ;
+	fprintf( stderr, "Weak kmer threshold rate: %lf\n", ERROR_RATE ) ;
 	//exit ( 1 ) ;
 
 	// Get the bad quality screo
