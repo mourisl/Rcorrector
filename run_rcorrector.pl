@@ -1,4 +1,4 @@
-#!/bin/perl
+#!/usr/bin/env perl
 
 use strict ;
 use Cwd 'cwd' ;
@@ -66,7 +66,7 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 	if ( $ARGV[$i] eq "-r" )
 	{
 		AddJellyFishReadFile( $ARGV[ $i + 1] ) ;
-		
+
 		push @rcorrectorArguments, $ARGV[$i] ;
 		push @rcorrectorArguments, $ARGV[$i + 1] ;
 
@@ -76,7 +76,7 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 	{
 		AddJellyFishReadFile( $ARGV[ $i + 1 ] ) ;
 		AddJellyFishReadFile( $ARGV[ $i + 2 ] ) ;
-		
+
 		push @rcorrectorArguments, $ARGV[$i] ;
 		push @rcorrectorArguments, $ARGV[$i + 1] ;
 		push @rcorrectorArguments, $ARGV[$i + 2] ;
@@ -129,8 +129,8 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 	}
 	elsif ( $ARGV[$i] eq "-t" )
 	{
-		$numOfThread = $ARGV[$i+1] ; 
-		
+		$numOfThread = $ARGV[$i+1] ;
+
 		push @rcorrectorArguments, $ARGV[$i] ;
 		push @rcorrectorArguments, $ARGV[$i + 1] ;
 
@@ -139,7 +139,7 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 	elsif ( $ARGV[$i] eq "-k" )
 	{
 		$kmerSize = $ARGV[$i + 1] ;
-		
+
 		push @rcorrectorArguments, $ARGV[$i] ;
 		push @rcorrectorArguments, $ARGV[$i + 1] ;
 
@@ -174,6 +174,12 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 		$stage = $ARGV[$i + 1] ;
 		++$i ;
 	}
+	elsif ( $ARGV[$i] eq "-od" )
+	{
+		push @rcorrectorArguments, $ARGV[$i] ;
+		push @rcorrectorArguments, $ARGV[$i + 1] ;
+		++$i ;
+	}
 	else
 	{
 		die "Unknown argument ".$ARGV[$i]."\n" ;
@@ -181,7 +187,7 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 }
 #`echo $numOfThread > tmp.out `
 
-# Build the input file arguments for 
+# Build the input file arguments for
 for ( my $i = 0 ; $i < @singleFileList ; ++$i )
 {
 	$fileArguments = $fileArguments." -r ".$singleFileList[$i] ;
@@ -222,7 +228,7 @@ if ( $stage <= 0 )
 
 if ( $stage <= 1 )
 {
-	print( "Count the kmers showed up in the bloom filter\n" ) ;
+	print( "Count the kmers in the bloom filter\n" ) ;
 	print( "$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\n" ) ;
 	die "Failed at stage 1.\n" if ( system( "bash -c \"$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\"" ) != 0 ) ;
 }
