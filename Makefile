@@ -3,7 +3,7 @@ CXXFLAGS= -Wall -O3 -std=c++0x
 LINKFLAGS = -I . -lpthread -lz 
 DEBUG=
 jellyfishPath = `which jellyfish`
-jellyfishVersion = `jellyfish --version &>&1 | cut -f2 -d' ' | cut -f1 -d'.'`
+jellyfishVersion = `jellyfish --version | cut -f2 -d' ' | cut -f1 -d'.'`
 OBJECTS = KmerCode.o ErrorCorrection.o
 all: main.o $(OBJECTS)
 	$(CXX) -o rcorrector $(CXXFLAGS) $(OBJECTS) main.o $(LINKFLAGS)
