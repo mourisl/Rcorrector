@@ -222,22 +222,22 @@ my $crc = md5_hex( $jellyfishFiles ) ;
 if ( $stage <= 0 )
 {
 	print( "Put the kmers into bloom filter\n" ) ;
-	print( "$WD/jellyfish-2.1.3/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\n" ) ;
-	die "Failed at stage 0.\n" if ( system( "bash -c \"$WD/jellyfish-2.1.3/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\"" ) != 0 ) ;
+	print( "$WD/jellyfish/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\n" ) ;
+	die "Failed at stage 0.\n" if ( system( "bash -c \"$WD/jellyfish/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\"" ) != 0 ) ;
 }
 
 if ( $stage <= 1 )
 {
 	print( "Count the kmers in the bloom filter\n" ) ;
-	print( "$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\n" ) ;
-	die "Failed at stage 1.\n" if ( system( "bash -c \"$WD/jellyfish-2.1.3/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\"" ) != 0 ) ;
+	print( "$WD/jellyfish/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\n" ) ;
+	die "Failed at stage 1.\n" if ( system( "bash -c \"$WD/jellyfish/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\"" ) != 0 ) ;
 }
 
 if ( $stage <= 2 )
 {
 	print( "Dump the kmers\n" ) ;
-	print( "$WD/jellyfish-2.1.3/bin/jellyfish dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump\n" ) ;
-	die "Failed at stage 2.\n" if ( system( "$WD/jellyfish-2.1.3/bin/jellyfish dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump" ) != 0 )
+	print( "$WD/jellyfish/bin/jellyfish dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump\n" ) ;
+	die "Failed at stage 2.\n" if ( system( "$WD/jellyfish/bin/jellyfish dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump" ) != 0 )
 }
 
 if ( $stage <= 3 )
