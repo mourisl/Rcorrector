@@ -19,7 +19,7 @@ Rcorrector can also be applied to other type of sequencing data where the read c
 
 1. Clone the [GitHub repo](https://github.com/mourisl/rcorrector), e.g. with `git clone https://github.com/mourisl/rcorrector.git`
 2. Run `make` in the repo directory
-	During the `make` procedure, the script will download the jellyfish from their repository. Rcorrector looks for the binary file of jellyfish2 in jellyfish/bin/ .
+	During the `make` procedure, the script will check whether you have jellyfish2 in $PATH. If not, it will download and compile jellyfish2 from its repository. 
 
 ### Usage
 	Usage: perl run_rcorrector.pl [OPTIONS]
