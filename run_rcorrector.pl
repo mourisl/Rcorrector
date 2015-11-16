@@ -40,6 +40,12 @@ if ( scalar( @ARGV ) == 0 )
 	die "$usage\n" ;
 }
 
+my $jellyfishBin = "jellyfish" ;
+if ( -e "$WD/jellyfish/bin/jellyfish" )
+{
+	$jellyfishBin = "$WD/jellyfish/bin/jellyfish" ;
+}
+
 my $fileArguments ;
 my @singleFileList ;
 my @firstMateFileList ;
@@ -222,22 +228,22 @@ my $crc = md5_hex( $jellyfishFiles ) ;
 if ( $stage <= 0 )
 {
 	print( "Put the kmers into bloom filter\n" ) ;
-	print( "$WD/jellyfish/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\n" ) ;
-	die "Failed at stage 0.\n" if ( system( "bash -c \"$WD/jellyfish/bin/jellyfish bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\"" ) != 0 ) ;
+	print( "$jellyfishBin bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\n" ) ;
+	die "Failed at stage 0.\n" if ( system( "bash -c \"$jellyfishBin bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\"" ) != 0 ) ;
 }
 
 if ( $stage <= 1 )
 {
 	print( "Count the kmers in the bloom filter\n" ) ;
-	print( "$WD/jellyfish/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\n" ) ;
-	die "Failed at stage 1.\n" if ( system( "bash -c \"$WD/jellyfish/bin/jellyfish count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\"" ) != 0 ) ;
+	print( "$jellyfishBin count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\n" ) ;
+	die "Failed at stage 1.\n" if ( system( "bash -c \"$jellyfishBin count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\"" ) != 0 ) ;
 }
 
 if ( $stage <= 2 )
 {
 	print( "Dump the kmers\n" ) ;
-	print( "$WD/jellyfish/bin/jellyfish dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump\n" ) ;
-	die "Failed at stage 2.\n" if ( system( "$WD/jellyfish/bin/jellyfish dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump" ) != 0 )
+	print( "$jellyfishBin dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump\n" ) ;
+	die "Failed at stage 2.\n" if ( system( "$jellyfishBin dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump" ) != 0 )
 }
 
 if ( $stage <= 3 )
