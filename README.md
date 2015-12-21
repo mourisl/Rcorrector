@@ -30,7 +30,7 @@ Rcorrector can also be applied to other type of sequencing data where the read c
 		-2 seq_files_right: comma separated files for the second mate in the paired-end data sets
 		-i seq_files_interleaved: comma sperated files for interleaved paired-end data sets
 		Optional
-		-k INT: kmer_length (default: 23)
+		-k INT: kmer_length (<=32, default: 23)
 		-od STRING: output_file_directory (default: ./)
 		-t INT: number of threads to use (default: 1)
 		-trim : allow trimming (default: false)

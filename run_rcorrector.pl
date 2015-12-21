@@ -22,7 +22,7 @@ my $usage = "Usage: perl ./run_rcorrector.pl [OPTIONS]\n".
 		"\t-2 seq_files_right: comma separated files for the second mate in the paired-end data sets\n".
 		"\t-i seq_files_interleaved: comma sperated files for interleaved paired-end data sets\n".
 		"Other parameters:\n".
-		"\t-k kmer_length (default: 23)\n".
+		"\t-k kmer_length (<=32, default: 23)\n".
 		"\t-od output_file_directory (default: ./)\n".
 		"\t-t number of threads to use (default: 1)\n".
 		#"\t-trim allow trimming (default: false)\n".
@@ -192,6 +192,11 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 	}
 }
 #`echo $numOfThread > tmp.out `
+
+if ( $kmerSize > 32 )
+{
+	die "The kmer size can not be greater than 32.\n" ;
+}
 
 # Build the input file arguments for
 for ( my $i = 0 ; $i < @singleFileList ; ++$i )
