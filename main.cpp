@@ -396,7 +396,7 @@ int main( int argc, char *argv[] )
 			}
 
 			int ecResult ;
-			ecResult = ErrorCorrection( seq, qual, t, kcode, kmers ) ;	
+			ecResult = ErrorCorrection( seq, qual, t, kcode, kmers ) ;
 			
 			UpdateSummary( ecResult, summary ) ;
 			//if ( !strcmp( seq, "GGACTTTGAAAAGAGAGTCAAAGAGTGCTTGAAATTGTCGGGAGGGAAGGGGATGGGGGCCGGGGATGGGGCGGG" ) )
@@ -438,11 +438,8 @@ int main( int argc, char *argv[] )
 		arg.kmerLength = kmerLength ;
 		arg.kmers = &kmers ;
 		arg.readBatch = readBatch ;
-		arg.readBatch2 = NULL ;
-		if ( reads.IsPaired() )
-		{
-			arg.readBatch2 = readBatch2 ;
-		}
+		//arg.readBatch2 = NULL ;
+		arg.readBatch2 = readBatch2 ;
 		arg.lock = &mutexErrorCorrection ;
 		
 		while ( 1 )
@@ -456,7 +453,11 @@ int main( int argc, char *argv[] )
 					fprintf( stderr, "ERROR: The files are not paired!\n" ) ; 
 					exit ( 1 ) ;
 				}
+				arg.readBatch2 = readBatch2 ;
 			}
+			else
+				arg.readBatch2 = NULL ;
+
 			if ( batchSize == 0 )
 				break ; 
 			//printf( "batchSize=%d\n", batchSize ) ;

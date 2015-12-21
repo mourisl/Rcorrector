@@ -366,8 +366,8 @@ class Reads
 				char *seq = readBatch[i].seq ;
 				char *qual = readBatch[i].qual ;
 				int correction = readBatch[i].correction ;
-				int badPrefix = readBatch[i].badPrefix ;
-				int badSuffix = readBatch[i].badSuffix ;
+				int badPrefix = 0 ; //readBatch[i].badPrefix ;
+				int badSuffix = 0 ; //readBatch[i].badSuffix ;
 				
 				if ( correction == 0 && badPrefix == 0 && badSuffix == 0 )
 				{

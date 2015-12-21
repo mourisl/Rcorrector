@@ -227,29 +227,29 @@ my $crc = md5_hex( $jellyfishFiles ) ;
 
 if ( $stage <= 0 )
 {
-	print( "Put the kmers into bloom filter\n" ) ;
-	print( "$jellyfishBin bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\n" ) ;
+	print STDERR ( "Put the kmers into bloom filter\n" ) ;
+	print STDERR ( "$jellyfishBin bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\n" ) ;
 	die "Failed at stage 0.\n" if ( system( "bash -c \"$jellyfishBin bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\"" ) != 0 ) ;
 }
 
 if ( $stage <= 1 )
 {
-	print( "Count the kmers in the bloom filter\n" ) ;
-	print( "$jellyfishBin count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\n" ) ;
+	print STDERR ( "Count the kmers in the bloom filter\n" ) ;
+	print STDERR ( "$jellyfishBin count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\n" ) ;
 	die "Failed at stage 1.\n" if ( system( "bash -c \"$jellyfishBin count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\"" ) != 0 ) ;
 }
 
 if ( $stage <= 2 )
 {
-	print( "Dump the kmers\n" ) ;
-	print( "$jellyfishBin dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump\n" ) ;
+	print STDERR ( "Dump the kmers\n" ) ;
+	print STDERR ( "$jellyfishBin dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump\n" ) ;
 	die "Failed at stage 2.\n" if ( system( "$jellyfishBin dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump" ) != 0 )
 }
 
 if ( $stage <= 3 )
 {
-	print( "Error correction\n" ) ;
-	print( "$WD/rcorrector @rcorrectorArguments $fileArguments -c tmp_$crc.jf_dump\n" ) ;
+	print STDERR ( "Error correction\n" ) ;
+	print STDERR ( "$WD/rcorrector @rcorrectorArguments $fileArguments -c tmp_$crc.jf_dump\n" ) ;
 	die "Failed at stage 3.\n" if ( system( "$WD/rcorrector @rcorrectorArguments $fileArguments -c tmp_$crc.jf_dump" ) != 0 ) ;
 }
 
