@@ -687,6 +687,7 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 	int tstart, tend, longestTrustedLength, trustThreshold ;
 	//int searchResult ;
 	int totalFix= 0, allowedFix ;
+	int badSegmentCnt = 0 ;
 	int ret ;
 	int fixBottleNeck, bestFixBottleNeck ;
 	int strongTrustThreshold ;
@@ -1090,6 +1091,7 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 			fix[i] = -1 ;
 
 		// Scan towards right
+		badSegmentCnt = 0 ;	
 		if ( segmentInfoCnt > 0 )
 		{
 			int bestFixCnt = -1 ;
@@ -1097,7 +1099,6 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 			int maxFixCnt = allowedFix ;
 			
 			bestFixBottleNeck = INF ; 
-		
 			for ( k = 0 ; k < segmentInfoCnt ; ++k )
 			{
 				trialCnt = 0 ;
@@ -1136,7 +1137,10 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 				}
 				//printf( "%d\n", tmpBestFixBottleNeck ) ;
 				if ( tmpBestFixBottleNeck == -1 )
+				{
+					++badSegmentCnt ;
 					continue ; // ignore a bad segment.
+				}
 
 				if ( tmpBestFixBottleNeck < bestFixBottleNeck )
 					bestFixBottleNeck = tmpBestFixBottleNeck ;
@@ -1447,6 +1451,8 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 			++ret ;
 		}
 	}
+	if ( ret == 0 && badSegmentCnt > 0 )
+		return -1 ;
 	return ret ;
 }
 
