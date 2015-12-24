@@ -45,7 +45,13 @@ Rcorrector can also be applied to other type of sequencing data where the read c
 
 
 ### Output
-For each input file, Rcorrector will generate the corresponding output file with "*.cor.fq/fa" in the directory specified by "-od".
+For each input file, Rcorrector will generate the corresponding output file with "*.cor.fq/fa" in the directory specified by "-od". 
+
+In the header line for each read, Rcorrector will append some information.
+
+	"cor": some bases of the sequence are corrected
+	"unfixable_error": the errors could not be corrected
+	"l:INT m:INT h:INT": the lowest, median and highest kmer count of the kmers from the read
 
 
 ### Example
