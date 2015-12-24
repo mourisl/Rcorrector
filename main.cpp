@@ -370,25 +370,19 @@ int main( int argc, char *argv[] )
 			{
 				if ( reads.IsPaired() )
 				{
-					pairedReads.Next() ;
-					readId2 = pairedReads.id ;
-					seq2 = pairedReads.seq ;
-					if ( pairedReads.HasQuality() )
-						qual2 = pairedReads.qual ;
-					else
-						qual2 = NULL ;
+					pairedReads.NextWithBuffer( readBuffer[1].id, readBuffer[1].seq, readBuffer[1].qual ) ;
 				}
 				else if ( reads.IsInterleaved() )
 				{
 					reads.NextWithBuffer( readBuffer[1].id, readBuffer[1].seq, readBuffer[1].qual ) ;	
-					readId2 = readBuffer[1].id ;
-					seq2 = readBuffer[1].seq ;
-					
-					if ( qual != NULL )
-						qual2 = readBuffer[1].qual ;
-					else 
-						qual2 = NULL ;
 				}
+				readId2 = readBuffer[1].id ;
+				seq2 = readBuffer[1].seq ;
+
+				if ( qual != NULL )
+					qual2 = readBuffer[1].qual ;
+				else 
+					qual2 = NULL ;
 
 				t1 = GetStrongTrustedThreshold( seq, qual, kcode, kmers ) ;
 				t2 = GetStrongTrustedThreshold( seq2, qual2, kcode, kmers ) ;
@@ -397,7 +391,7 @@ int main( int argc, char *argv[] )
 
 			int ecResult ;
 			ecResult = ErrorCorrection( seq, qual, t, kcode, kmers ) ;
-			
+				
 			UpdateSummary( ecResult, summary ) ;
 			//if ( !strcmp( seq, "GGACTTTGAAAAGAGAGTCAAAGAGTGCTTGAAATTGTCGGGAGGGAAGGGGATGGGGGCCGGGGATGGGGCGGG" ) )
 			//	exit( 1 ) ;
@@ -406,18 +400,22 @@ int main( int argc, char *argv[] )
 			  printf( "%s\n%s\n", readId, seq ) ;*/
 			//printf( "%d\n", ecResult ) ;
 			readBuffer[0].correction = ecResult ;
+			GetKmerInformation( seq, kmerLength, kmers, readBuffer[0].l, readBuffer[0].m, readBuffer[0].h ) ;
 			reads.OutputBatch( &readBuffer[0], 1, false ) ;
 
 			if ( reads.IsPaired() )
 			{
 				ecResult = ErrorCorrection( seq2, qual2, t, kcode, kmers ) ;
-				pairedReads.Output( ecResult, 0, 0, false ) ;
+				readBuffer[1].correction = ecResult ; 
+				GetKmerInformation( seq2, kmerLength, kmers, readBuffer[1].l, readBuffer[1].m, readBuffer[1].h ) ;
+				pairedReads.OutputBatch( &readBuffer[1], 1, false ) ;
 				UpdateSummary( ecResult, summary ) ;
 			}
 			if ( reads.IsInterleaved() )
 			{
 				ecResult = ErrorCorrection( seq2, qual2, t, kcode, kmers ) ;
 				readBuffer[1].correction = ecResult ; 
+				GetKmerInformation( seq2, kmerLength, kmers, readBuffer[1].l, readBuffer[1].m, readBuffer[1].h ) ;
 				reads.OutputBatch( &readBuffer[1], 1, false) ;
 				UpdateSummary( ecResult, summary ) ;
 			}

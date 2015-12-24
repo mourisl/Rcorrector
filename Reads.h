@@ -18,6 +18,8 @@ struct _Read
 
 	int correction ;
 	int badPrefix, badSuffix ;
+	int info ;
+	int l, m, h ; // the kmer count information
 } ;
 
 class Reads
@@ -368,10 +370,11 @@ class Reads
 				int correction = readBatch[i].correction ;
 				int badPrefix = 0 ; //readBatch[i].badPrefix ;
 				int badSuffix = 0 ; //readBatch[i].badSuffix ;
-				
+				char kmerInfo[256] ;
+				sprintf( kmerInfo, "l:%d m:%d h:%d", readBatch[i].l, readBatch[i].m, readBatch[i].h ) ;
 				if ( correction == 0 && badPrefix == 0 && badSuffix == 0 )
 				{
-					outputFp[ fileInd ].Printf( "%s\n%s\n", id, seq ) ;
+					outputFp[ fileInd ].Printf( "%s %s\n%s\n", id, kmerInfo, seq ) ;
 					if ( FILE_TYPE[ fileInd ] != 0 )
 						outputFp[ fileInd ].Printf( "+\n%s\n", qual ) ;
 				}
@@ -383,7 +386,7 @@ class Reads
 					  }*/
 					if ( discard )
 						continue ;
-					outputFp[ fileInd ].Printf( "%s unfixable_error\n%s\n", id, seq ) ;
+					outputFp[ fileInd ].Printf( "%s %s unfixable_error\n%s\n", id, kmerInfo, seq ) ;
 					if ( FILE_TYPE[ fileInd ] != 0 )
 						outputFp[ fileInd ].Printf( "+\n%s\n", qual ) ;
 					//printf( "%s\n%s\n", readId, read ) ;
@@ -406,7 +409,7 @@ class Reads
 							sprintf( buffer3, " bad_suffix=%d", badSuffix ) ;
 					}
 
-					outputFp[ fileInd ].Printf( "%s%s%s%s\n%s\n", id, buffer1, buffer2, buffer3, seq ) ;
+					outputFp[ fileInd ].Printf( "%s %s%s%s%s\n%s\n", id, kmerInfo, buffer1, buffer2, buffer3, seq ) ;
 					if ( FILE_TYPE[ fileInd ] != 0 )
 					{
 						if ( allowTrimming )

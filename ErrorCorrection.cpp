@@ -108,6 +108,8 @@ void *ErrorCorrection_Thread( void *arg )
 		myArg->readBatch[ind].correction = correction ;
 		myArg->readBatch[ind].badPrefix = 0 ;
 		myArg->readBatch[ind].badSuffix = 0 ;
+		GetKmerInformation( myArg->readBatch[ind].seq, myArg->kmerLength, *myArg->kmers, 
+			myArg->readBatch[ind].l, myArg->readBatch[ind].m, myArg->readBatch[ind].h ) ;
 
 		if ( myArg->readBatch2 != NULL )
 		{
@@ -115,6 +117,8 @@ void *ErrorCorrection_Thread( void *arg )
 			myArg->readBatch2[ind].correction = correction ;
 			myArg->readBatch2[ind].badPrefix = 0 ;
 			myArg->readBatch2[ind].badSuffix = 0 ;
+			GetKmerInformation( myArg->readBatch2[ind].seq, myArg->kmerLength, *myArg->kmers, 
+					myArg->readBatch2[ind].l, myArg->readBatch2[ind].m, myArg->readBatch2[ind].h ) ;
 		}
 		if ( myArg->interleaved )
 		{
@@ -122,6 +126,8 @@ void *ErrorCorrection_Thread( void *arg )
 			myArg->readBatch[ind + 1].correction = correction ;
 			myArg->readBatch[ind + 1].badPrefix = 0 ;
 			myArg->readBatch[ind + 1].badSuffix = 0 ;
+			GetKmerInformation( myArg->readBatch[ind + 1].seq, myArg->kmerLength, *myArg->kmers, 
+					myArg->readBatch[ind + 1].l, myArg->readBatch[ind + 1].m, myArg->readBatch[ind + 1].h ) ;
 		}
 	}
 
@@ -1536,4 +1542,32 @@ int GetStrongTrustedThreshold( char *seq, char *qual, KmerCode &kcode, Store &km
 		return iBuffer[ ( i + kcnt - 1 ) / 2] ;
 	}
 
+}
+
+void GetKmerInformation( char *seq, int kmerLength, Store &kmers, int &l, int &m, int &h )
+{
+	int kmerCount[MAX_READ_LENGTH] ;
+	int i ;
+	int k = 0 ;
+	KmerCode kcode( kmerLength ) ;
+	for ( i = 0 ; seq[i] && i < kmerLength - 1 ; ++i )
+		kcode.Append( seq[i] ) ;
+	l = m = h = 0 ;
+	for ( ; seq[i] ; ++i )		
+	{
+		kcode.Append( seq[i] ) ;
+		if ( kcode.IsValid() )
+		{
+			kmerCount[k] = kmers.GetCount( kcode ) ;
+			if ( kmerCount[k] == 0 )
+				kmerCount[k] = 1 ;
+			++k ;
+		}
+	}
+	if ( k == 0 )
+		return ;
+	qsort( kmerCount, k, sizeof( int ), CompInt ) ;
+	l = kmerCount[0] ;
+	m = kmerCount[ k / 2 ] ;
+	h = kmerCount[ k - 1 ] ;
 }
