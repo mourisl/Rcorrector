@@ -37,6 +37,7 @@ Rcorrector can also be applied to other type of sequencing data where the read c
 		-maxcorK INT: the maximum number of correction within k-bp window (default: 4)
 		-ek INT: expected number of kmers; does not affect the correctness of program but affects the memory usage (default: 100000000)
 		-stdout: output the corrected reads to stdout (default: not used)
+		-verbose: output some correction information to stdout (default: not used)
 		-stage INT: start from which stage (default: 0)
 			0-start from begining(storing kmers in bloom filter) ;
 			1-start from count kmers showed up in bloom filter;

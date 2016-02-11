@@ -27,6 +27,7 @@ double ERROR_RATE ;
 char badQualityThreshold ; // quality <= this is bad
 bool zlibVersionChecked = false ;
 bool outputStdout = false ;
+bool VERBOSE = false ;
 
 struct _summary
 {
@@ -64,6 +65,7 @@ void PrintHelp()
 		"\t-maxcor INT: the maximum number of correction every 100bp (default: 8)\n" 
 		"\t-maxcorK INT: the maximum number of correction within k-bp window (default: 4)\n"
 		"\t-stdout: output the corrected sequences to stdout (default: not used)\n"
+		"\t-verbose: output some correction information to stdout (default: not used)\n"
 		) ;
 }
 
@@ -219,6 +221,10 @@ int main( int argc, char *argv[] )
 		else if ( !strcmp( "-stdout", argv[i] ) )
 		{
 			outputStdout = true ;
+		}
+		else if ( !strcmp( "-verbose", argv[i] ) )
+		{
+			VERBOSE = true ;
 		}
 		else if ( !strcmp( "-h", argv[i] ) )
 		{
@@ -390,7 +396,7 @@ int main( int argc, char *argv[] )
 			}
 
 			int ecResult ;
-			ecResult = ErrorCorrection( seq, qual, t, kcode, kmers ) ;
+			ecResult = ErrorCorrection( readId, seq, qual, t, kcode, kmers ) ;
 				
 			UpdateSummary( ecResult, summary ) ;
 			//if ( !strcmp( seq, "GGACTTTGAAAAGAGAGTCAAAGAGTGCTTGAAATTGTCGGGAGGGAAGGGGATGGGGGCCGGGGATGGGGCGGG" ) )
@@ -405,7 +411,7 @@ int main( int argc, char *argv[] )
 
 			if ( reads.IsPaired() )
 			{
-				ecResult = ErrorCorrection( seq2, qual2, t, kcode, kmers ) ;
+				ecResult = ErrorCorrection( readId2, seq2, qual2, t, kcode, kmers ) ;
 				readBuffer[1].correction = ecResult ; 
 				GetKmerInformation( seq2, kmerLength, kmers, readBuffer[1].l, readBuffer[1].m, readBuffer[1].h ) ;
 				pairedReads.OutputBatch( &readBuffer[1], 1, false ) ;
@@ -413,7 +419,7 @@ int main( int argc, char *argv[] )
 			}
 			if ( reads.IsInterleaved() )
 			{
-				ecResult = ErrorCorrection( seq2, qual2, t, kcode, kmers ) ;
+				ecResult = ErrorCorrection( readId2, seq2, qual2, t, kcode, kmers ) ;
 				readBuffer[1].correction = ecResult ; 
 				GetKmerInformation( seq2, kmerLength, kmers, readBuffer[1].l, readBuffer[1].m, readBuffer[1].h ) ;
 				reads.OutputBatch( &readBuffer[1], 1, false) ;

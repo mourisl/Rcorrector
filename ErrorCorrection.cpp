@@ -12,6 +12,7 @@ extern char numToNuc[26] ;
 extern int MAX_FIX_PER_100 ;
 extern int MAX_FIX_PER_K ;
 extern double ERROR_RATE ;
+extern bool VERBOSE ;
 
 extern char badQualityThreshold ;
 
@@ -104,7 +105,7 @@ void *ErrorCorrection_Thread( void *arg )
 			t = ( t1 < t2 ) ? t1 : t2 ;
 		}
 
-		correction = ErrorCorrection( myArg->readBatch[ind].seq, myArg->readBatch[ind].qual, t, kcode, *myArg->kmers ) ;
+		correction = ErrorCorrection( myArg->readBatch[ind].id, myArg->readBatch[ind].seq, myArg->readBatch[ind].qual, t, kcode, *myArg->kmers ) ;
 		myArg->readBatch[ind].correction = correction ;
 		myArg->readBatch[ind].badPrefix = 0 ;
 		myArg->readBatch[ind].badSuffix = 0 ;
@@ -113,7 +114,7 @@ void *ErrorCorrection_Thread( void *arg )
 
 		if ( myArg->readBatch2 != NULL )
 		{
-			correction = ErrorCorrection( myArg->readBatch2[ind].seq, myArg->readBatch2[ind].qual, t, kcode, *myArg->kmers ) ;
+			correction = ErrorCorrection( myArg->readBatch2[ind].id, myArg->readBatch2[ind].seq, myArg->readBatch2[ind].qual, t, kcode, *myArg->kmers ) ;
 			myArg->readBatch2[ind].correction = correction ;
 			myArg->readBatch2[ind].badPrefix = 0 ;
 			myArg->readBatch2[ind].badSuffix = 0 ;
@@ -122,7 +123,7 @@ void *ErrorCorrection_Thread( void *arg )
 		}
 		if ( myArg->interleaved )
 		{
-			correction = ErrorCorrection( myArg->readBatch[ind + 1].seq, myArg->readBatch[ind + 1].qual, t, kcode, *myArg->kmers ) ;
+			correction = ErrorCorrection( myArg->readBatch[ind + 1].id, myArg->readBatch[ind + 1].seq, myArg->readBatch[ind + 1].qual, t, kcode, *myArg->kmers ) ;
 			myArg->readBatch[ind + 1].correction = correction ;
 			myArg->readBatch[ind + 1].badPrefix = 0 ;
 			myArg->readBatch[ind + 1].badSuffix = 0 ;
@@ -678,9 +679,14 @@ void SearchPaths_Left( int start, int to, int pos, int t, bool isPaired, char *s
 
 
 
-int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCode &kcode, Store &kmers )
+int ErrorCorrection( char *id, char *seq, char *qual, int pairStrongTrustThreshold, KmerCode &kcode, Store &kmers )
 {
 	//printf( "Correct %s\n", seq ) ; fflush( stdout ) ;
+
+	if ( VERBOSE )
+	{
+		printf( "%s\n", id ) ;
+	}
 	int i, j, k ;
 	int kcnt = 0 ;
 	int kmerLength = kcode.GetKmerLength() ;
@@ -746,12 +752,19 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 		return -1 ;
 
 
-#ifdef DEBUG
-	printf( "%s\n", seq ) ;
-	for ( i = 0 ; i < kcnt ; ++i )
-		printf( "%d ", counts[i] ) ;
-	printf( "\n" ) ;
-#endif
+	//printf( "%s\n", seq ) ;
+	if ( VERBOSE )
+	{
+		printf( "Before correction:\n%s\n", seq ) ;
+		for ( i = 0 ; i < kcnt ; ++i )
+		{
+			if ( counts[i] != 0 )
+				printf( "%d ", counts[i] ) ;
+			else
+				printf( "1 " ) ;
+		}
+		printf( "\n" ) ;
+	}
 
 	trustThreshold = 2 ;
 
@@ -821,9 +834,6 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 	}
 	printf( "\n" ) ;
 #endif*/
-#ifdef DEBUG
-	printf( "strong trust threshold=%d threshold=%d\n", strongTrustThreshold, trustThreshold ) ; fflush( stdout ) ;
-#endif
 	//trustThreshold /= 2 ;
 	if ( trustThreshold < 2 )
 		trustThreshold = 2 ;
@@ -840,6 +850,9 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 	int iter = 0 ;
 	while ( 1 )
 	{
+		if ( VERBOSE )
+			printf( "strong trust threshold=%d threshold=%d\n", strongTrustThreshold, trustThreshold ) ;
+		
 		allowedFix = readLength ;//* MAX_FIX_PER_100 / 100 ;
 		totalFix = 0 ;
 		unfixable = false ;
@@ -1069,12 +1082,13 @@ int ErrorCorrection( char *seq, char *qual, int pairStrongTrustThreshold, KmerCo
 		longestTrustedLength = tend - tstart + 1 ;
 		if ( longestTrustedLength < 0 )
 			longestTrustedLength = -1 ;*/
-
-#ifdef DEBUG
-		for ( i = 0 ; i < readLength ; ++i )
-			printf( "%d", isStrongTrusted[i] ) ;
-		printf( "\n" ) ;
-#endif
+		if ( VERBOSE )
+		{
+			printf( "Is corresponding base strong trusted?\n" ) ;
+			for ( i = 0 ; i < readLength ; ++i )
+				printf( "%d", isStrongTrusted[i] ) ;
+			printf( "\n" ) ;
+		}
 
 #ifdef DEBUG
 		printf( "trustedIslandCnt=%d segmentInfoCnt=%d\n", trustedIslandCnt, segmentInfoCnt ) ;
@@ -1566,6 +1580,15 @@ void GetKmerInformation( char *seq, int kmerLength, Store &kmers, int &l, int &m
 	}
 	if ( k == 0 )
 		return ;
+
+	if ( VERBOSE )	
+	{
+		printf( "After coorrection:\n" ) ;
+		printf( "%s\n", seq ) ;
+		for ( i = 0 ; i < k ; ++i )
+			printf( "%d ", kmerCount[i] ) ;
+		printf( "\n" ) ;
+	}
 	qsort( kmerCount, k, sizeof( int ), CompInt ) ;
 	l = kmerCount[0] ;
 	m = kmerCount[ k / 2 ] ;

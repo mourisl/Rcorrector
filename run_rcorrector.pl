@@ -27,8 +27,9 @@ my $usage = "Usage: perl ./run_rcorrector.pl [OPTIONS]\n".
 		"\t-t number of threads to use (default: 1)\n".
 		#"\t-trim allow trimming (default: false)\n".
 		"\t-maxcorK INT: the maximum number of correction within k-bp window (default: 4)\n".
-		"\t-ek expected_number_of_kmers: does not affect the correctness of program but affect the memory usage (default: 100000000)".
+		"\t-ek expected_number_of_kmers: does not affect the correctness of program but affect the memory usage (default: 100000000)\n".
 		"\t-stdout: output the corrected reads to stdout (default: not used)\n".
+		"\t-verbose: output some correction information to stdout (default: not used)\n".
 		"\t-stage INT: start from which stage (default: 0)\n".
 		"\t\t0-start from begining(storing kmers in bloom filter);\n".
 		"\t\t1-start from count kmers showed up in bloom filter;\n".
@@ -172,6 +173,10 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 		++$i ;
 	}
 	elsif ( $ARGV[$i] eq "-stdout" )
+	{
+		push @rcorrectorArguments, $ARGV[$i] ;
+	}
+	elsif ( $ARGV[$i] eq "-verbose" )
 	{
 		push @rcorrectorArguments, $ARGV[$i] ;
 	}
