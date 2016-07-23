@@ -24,9 +24,10 @@ my $usage = "Usage: perl ./run_rcorrector.pl [OPTIONS]\n".
 		"Other parameters:\n".
 		"\t-k kmer_length (<=32, default: 23)\n".
 		"\t-od output_file_directory (default: ./)\n".
-		"\t-t number of threads to use (default: 1)\n".
+		"\t-t number_of_threads (default: 1)\n".
 		#"\t-trim allow trimming (default: false)\n".
 		"\t-maxcorK INT: the maximum number of correction within k-bp window (default: 4)\n".
+		"\t-wk FLOAT: the proportion of kmers that are used to estimate weak kmer count threshold, lower for more divergent genome (default: 0.95)\n".
 		"\t-ek expected_number_of_kmers: does not affect the correctness of program but affect the memory usage (default: 100000000)\n".
 		"\t-stdout: output the corrected reads to stdout (default: not used)\n".
 		"\t-verbose: output some correction information to stdout (default: not used)\n".
@@ -186,6 +187,12 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 		++$i ;
 	}
 	elsif ( $ARGV[$i] eq "-od" )
+	{
+		push @rcorrectorArguments, $ARGV[$i] ;
+		push @rcorrectorArguments, $ARGV[$i + 1] ;
+		++$i ;
+	}
+	elsif ( $ARGV[$i] eq "-wk" )
 	{
 		push @rcorrectorArguments, $ARGV[$i] ;
 		push @rcorrectorArguments, $ARGV[$i + 1] ;

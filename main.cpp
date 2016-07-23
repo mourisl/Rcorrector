@@ -64,6 +64,7 @@ void PrintHelp()
 		//"\t-all: output all the reads including those unfixable (default: false)\n"
 		"\t-maxcor INT: the maximum number of correction every 100bp (default: 8)\n" 
 		"\t-maxcorK INT: the maximum number of correction within k-bp window (default: 4)\n"
+		"\t-wk FLOAT: the proportion of kmers that are used to estimate weak kmer count threshold (default: 0.95)\n"
 		"\t-stdout: output the corrected sequences to stdout (default: not used)\n"
 		"\t-verbose: output some correction information to stdout (default: not used)\n"
 		) ;
@@ -130,6 +131,7 @@ int main( int argc, char *argv[] )
 {
 	int i, j, k ;
 	int kmerLength = 23 ;
+	double errorRateKmerPortion ;
 	Reads reads ;
 	Reads pairedReads ;
 
@@ -155,6 +157,7 @@ int main( int argc, char *argv[] )
 	agressiveCorrection = false ;
 	MAX_FIX_PER_100 = 8 ;
 	MAX_FIX_PER_K = 4 ;
+	errorRateKmerPortion = 0.95 ;
 
 	summary.totalCorrections = 0 ;
 	summary.totalReads = 0 ;
@@ -218,6 +221,11 @@ int main( int argc, char *argv[] )
 		{
 			agressiveCorrection = true ;	
 		}*/
+		else if ( !strcmp( "-wk", argv[i] ) )
+		{
+			errorRateKmerPortion = atof( argv[i + 1 ] )  ;
+			++i ;
+		}
 		else if ( !strcmp( "-stdout", argv[i] ) )
 		{
 			outputStdout = true ;
@@ -307,7 +315,7 @@ int main( int argc, char *argv[] )
 	rewind( fpJellyFishDump ) ;
 	k = 0 ;
 	const int rateSize = 100000 ;
-	double *rates = (double *)malloc( sizeof( double ) * rateSize ) ;
+	double *rates = (double *)malloc( sizeof( double ) * ( rateSize + 1 ) ) ;
 	rates[0] = 0 ;
 	while ( fscanf( fpJellyFishDump, "%s", buffer ) != EOF && k < rateSize )
 	{
@@ -343,11 +351,12 @@ int main( int argc, char *argv[] )
 		++k ;
 	}
 	qsort( rates, k, sizeof( rates[0] ), CompDouble ) ;
-	ERROR_RATE = rates[(int)( k * 0.95 )] ;
+	rates[k] = rates[k - 1] ;
+	ERROR_RATE = rates[(int)( k * errorRateKmerPortion )] ;
 	if ( ERROR_RATE == 0 || k < 100 )
 		ERROR_RATE = 0.01 ;
 	free( rates ) ;
-	fprintf( stderr, "Weak kmer threshold rate: %lf\n", ERROR_RATE ) ;
+	fprintf( stderr, "Weak kmer threshold rate: %lf (estimated from %.3lf/1 of the chosen kmers)\n", ERROR_RATE, errorRateKmerPortion ) ;
 	//exit ( 1 ) ;
 
 	// Get the bad quality screo
