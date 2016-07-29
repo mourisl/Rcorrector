@@ -49,7 +49,7 @@ int CompDouble( const void *p1, const void *p2 )
 
 void PrintHelp()
 {
-	fprintf( stderr, "Usage: ./a.out [OPTIONS]\n"
+	fprintf( stderr, "Usage: ./rcorrector [OPTIONS]\n"
 		"OPTIONS:\n"
 		"Required parameters:\n"
 		"\t-r seq_file: seq_file is the path to the sequence file. Can use multiple -r to specifiy multiple sequence files\n"
