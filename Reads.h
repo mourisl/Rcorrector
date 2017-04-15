@@ -79,7 +79,7 @@ class Reads
 		char seq[MAX_READ_LENGTH] ;
 		char qual[MAX_READ_LENGTH] ;
 
-		Reads(): fpUsed(0), currentFpInd(0)
+		Reads(): fpUsed(0), currentFpInd(0), discard( false )
 		{
 			compressLevel = 1 ;
 			strcpy( outputDirectory, "./" ) ;
