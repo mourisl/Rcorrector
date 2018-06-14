@@ -47,6 +47,10 @@ if ( -e "$WD/jellyfish/bin/jellyfish" )
 {
 	$jellyfishBin = "$WD/jellyfish/bin/jellyfish" ;
 }
+if ( ! -e "$WD/rcorrector" )
+{
+	die "Could not find rcorrector binary file at $WD/rcorrector\n" ;
+}
 
 my $fileArguments ;
 my @singleFileList ;
