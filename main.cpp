@@ -362,7 +362,7 @@ int main( int argc, char *argv[] )
 	// Get the bad quality screo
 	reads.Rewind() ;
 	badQualityThreshold = GetBadQuality( reads ) ;
-	fprintf( stderr, "Bad quality threshold is %c\n", badQualityThreshold ) ;
+	fprintf( stderr, "Bad quality threshold is '%c'\n", badQualityThreshold ) ;
 
 	// Scan the reads to get the information of the kmers.
 	reads.Rewind() ;
