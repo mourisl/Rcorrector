@@ -281,8 +281,8 @@ class Reads
 				  printf( "%s\n%s\n", readId, read ) ;
 				  }*/
 
-				if ( discard )
-					return ;
+				//if ( discard )
+				//	return ;
 				outputFp[ currentFpInd].Printf( "%s unfixable_error\n%s\n", id, seq ) ;
 				if ( FILE_TYPE[ currentFpInd ] != 0 )
 					outputFp[ currentFpInd ].Printf( "+\n%s\n", qual ) ;
@@ -384,8 +384,8 @@ class Reads
 					  {
 					  printf( "%s\n%s\n", readId, read ) ;
 					  }*/
-					if ( discard )
-						continue ;
+					//if ( discard )
+					//	continue ;
 					outputFp[ fileInd ].Printf( "%s %s unfixable_error\n%s\n", id, kmerInfo, seq ) ;
 					if ( FILE_TYPE[ fileInd ] != 0 )
 						outputFp[ fileInd ].Printf( "+\n%s\n", qual ) ;
