@@ -268,7 +268,6 @@ int main( int argc, char *argv[] )
 	}
 	
 	KmerCode kcode( kmerLength ) ; 
-	
 	if ( numOfThreads > 1 )
 	{
 		// Initialized pthread variables
@@ -520,6 +519,8 @@ int main( int argc, char *argv[] )
 
 		free( readBatch ) ;
 		free( readBatch2 ) ;
+		free( threads ) ;
+		pthread_mutex_destroy( &mutexErrorCorrection ) ;
 	}
 
 	fclose( fpJellyFishDump ) ;

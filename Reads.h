@@ -422,6 +422,8 @@ class Reads
 		
 		bool IsPaired()
 		{
+			if ( currentFpInd >= fpUsed ) // happens when reaching the last batch.
+				return paired[ fpUsed - 1 ] ;
 			if ( paired[ currentFpInd ] )
 				return true ;
 			return false ;
@@ -429,6 +431,8 @@ class Reads
 
 		bool IsInterleaved()
 		{
+			if ( currentFpInd >= fpUsed ) // happens when reaching the last batch.
+				return interleaved[ fpUsed - 1 ] ;
 			if ( interleaved[ currentFpInd ] )
 				return true ;
 			return false ;
