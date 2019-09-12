@@ -30,6 +30,7 @@ my $usage = "Usage: perl ./run_rcorrector.pl [OPTIONS]\n".
 		"\t-wk FLOAT: the proportion of kmers that are used to estimate weak kmer count threshold, lower for more divergent genome (default: 0.95)\n".
 		"\t-ek expected_number_of_kmers: does not affect the correctness of program but affect the memory usage (default: 100000000)\n".
 		"\t-stdout: output the corrected reads to stdout (default: not used)\n".
+		"\t-version: print the version information and quit\n".
 		"\t-verbose: output some correction information to stdout (default: not used)\n".
 		"\t-stage INT: start from which stage (default: 0)\n".
 		"\t\t0-start from begining(storing kmers in bloom filter);\n".
@@ -201,6 +202,11 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 		push @rcorrectorArguments, $ARGV[$i] ;
 		push @rcorrectorArguments, $ARGV[$i + 1] ;
 		++$i ;
+	}
+	elsif ( $ARGV[$i] eq "-version" )
+	{
+		print ( "Rcorrector v1.0.4\n" ) ;
+		exit( 0 ) ;
 	}
 	else
 	{
