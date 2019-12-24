@@ -16,7 +16,7 @@ all: main.o $(OBJECTS)
 		fi;\
 	fi ;
 
-main.o: main.cpp utils.h Reads.h Store.h
+main.o: main.cpp utils.h Reads.h Store.h File.h
 KmerCode.o: KmerCode.cpp KmerCode.h 
 ErrorCorrection.o: ErrorCorrection.cpp ErrorCorrection.h
 
