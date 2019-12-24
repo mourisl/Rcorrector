@@ -112,7 +112,7 @@ class Reads
 				fprintf( stderr, "The number of read files exceeds the limit %d.\n", MAX_READ_FILE ) ;
 				exit( 1 ) ;
 			}
-			char buffer[1024], fileName[1024] ;
+			char buffer[2048], fileName[1024] ;
 			fp[ fpUsed ].Open( file, "r" ) ;
 			
 			fp[ fpUsed ].Gets( buffer, sizeof( buffer ) ) ;
