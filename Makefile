@@ -12,7 +12,7 @@ all: main.o $(OBJECTS)
 		if [ ! -f ./jellyfish/bin/jellyfish ] ; \
 		then \
 			wget -O jellyfish.tar.gz https://github.com/gmarcais/Jellyfish/releases/download/v2.3.0/jellyfish-2.3.0.tar.gz ;\
-			tar -xzf jellyfish.tar.gz ; mv jellyfish-2.2.4 jellyfish ; rm jellyfish.tar.gz ; cd jellyfish && ./configure && make ;\
+			tar -xzf jellyfish.tar.gz ; mv jellyfish-2.3.0 jellyfish ; rm jellyfish.tar.gz ; cd jellyfish && ./configure && make ;\
 		fi;\
 	fi ;
 
