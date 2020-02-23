@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS= -Wall -O3 -std=c++0x
-LINKFLAGS = -I . -lpthread -lz 
+LINKFLAGS = -I . -lpthread -lz
 DEBUG=
 jellyfishPath = `which jellyfish`
 jellyfishVersion = `jellyfish --version | cut -f2 -d' ' | cut -f1 -d'.'`
@@ -11,13 +11,13 @@ all: main.o $(OBJECTS)
 	then \
 		if [ ! -f ./jellyfish/bin/jellyfish ] ; \
 		then \
-			wget -O jellyfish.tar.gz https://github.com/gmarcais/Jellyfish/releases/download/v2.2.4/jellyfish-2.2.4.tar.gz ;\
+			wget -O jellyfish.tar.gz https://github.com/gmarcais/Jellyfish/releases/download/v2.3.0/jellyfish-2.3.0.tar.gz ;\
 			tar -xzf jellyfish.tar.gz ; mv jellyfish-2.2.4 jellyfish ; rm jellyfish.tar.gz ; cd jellyfish && ./configure && make ;\
 		fi;\
 	fi ;
 
 main.o: main.cpp utils.h Reads.h Store.h File.h
-KmerCode.o: KmerCode.cpp KmerCode.h 
+KmerCode.o: KmerCode.cpp KmerCode.h
 ErrorCorrection.o: ErrorCorrection.cpp ErrorCorrection.h
 
 clean:
