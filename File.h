@@ -135,7 +135,7 @@ public:
 
 	int Printf( const char *fmt, ... )
 	{
-		char buffer[1024] ;
+		char buffer[3 * MAX_READ_LENGTH + 3 * MAX_ID_LENGTH] ;
 		va_list args ;
 		va_start( args, fmt ) ;
 		vsprintf( buffer, fmt, args ) ;
