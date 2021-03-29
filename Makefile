@@ -25,4 +25,4 @@ KmerCode.o: KmerCode.cpp KmerCode.h
 ErrorCorrection.o: ErrorCorrection.cpp ErrorCorrection.h
 
 clean:
-	rm -rf *.o *.gch rcorrector jellyfish
+	rm -rf *.o *.gch rcorrector
