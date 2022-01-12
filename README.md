@@ -33,7 +33,6 @@ Rcorrector can also be applied to other type of sequencing data where the read c
 		-k INT: kmer_length (<=32, default: 23)
 		-od STRING: output_file_directory (default: ./)
 		-t INT: number of threads to use (default: 1)
-		-trim : allow trimming (default: false)
 		-maxcorK INT: the maximum number of correction within k-bp window (default: 4)
 		-wk FLOAT: the proportion of kmers that are used to estimate weak kmer count threshold, lower for more divergent genome (default: 0.95)
 		-ek INT: expected number of kmers; does not affect the correctness of program but affects the memory usage (default: 100000000)
