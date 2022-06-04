@@ -205,7 +205,7 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 	}
 	elsif ( $ARGV[$i] eq "-version" )
 	{
-		print ( "Rcorrector v1.0.4\n" ) ;
+		print ( "Rcorrector v1.0.5\n" ) ;
 		exit( 0 ) ;
 	}
 	else
