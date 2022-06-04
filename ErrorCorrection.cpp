@@ -710,6 +710,9 @@ int ErrorCorrection( char *id, char *seq, char *qual, int pairStrongTrustThresho
 	struct _segmentInfo segmentInfo[MAX_READ_LENGTH], trustedIsland[MAX_READ_LENGTH] ;
 	int segmentInfoCnt = 0, trustedIslandCnt = 0 ;
 
+	if ( strlen( seq ) < kmerLength )
+	  return -1 ;
+	
 	kcode.Restart() ;
 	for ( i = 0 ; i < kmerLength - 1 ; ++i )
 		kcode.Append( seq[i] ) ;
@@ -1485,6 +1488,9 @@ int GetStrongTrustedThreshold( char *seq, char *qual, KmerCode &kcode, Store &km
 	int readLength ;
 	int kmerLength = kcode.GetKmerLength() ;
 
+	if ( strlen( seq ) < kmerLength )
+	  return -1 ;
+	
 	kcode.Restart() ;
 	for ( i = 0 ; i < kmerLength - 1 ; ++i )
 		kcode.Append( seq[i] ) ;
