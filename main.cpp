@@ -482,7 +482,6 @@ int main( int argc, char *argv[] )
 			for ( i = 0 ; i < numOfThreads ; ++i )
 				pthread_join( threads[i], &pthreadStatus ) ;
 			
-			
 			if ( outputStdout )
 			{
 				if ( reads.IsPaired() )
@@ -491,7 +490,7 @@ int main( int argc, char *argv[] )
 					{
 						reads.OutputBatch( readBatch + i, 1, false, fileInd1 ) ;
 						UpdateSummary( readBatch[i].correction, summary ) ;
-						pairedReads.OutputBatch( readBatch + i, 1, false, fileInd2 ) ;
+						pairedReads.OutputBatch( readBatch2 + i, 1, false, fileInd2 ) ;
 						UpdateSummary( readBatch2[i].correction, summary ) ;
 					}
 				}
