@@ -30,6 +30,7 @@ my $usage = "Usage: perl ./run_rcorrector.pl [OPTIONS]\n".
 		"\t-wk FLOAT: the proportion of kmers that are used to estimate weak kmer count threshold, lower for more divergent genome (default: 0.95)\n".
 		"\t-ek expected_number_of_kmers: does not affect the correctness of program but affect the memory usage (default: 100000000)\n".
 		"\t-stdout: output the corrected reads to stdout (default: not used)\n".
+		"\t-tmpd temp_file_directory: directory for tempoary files (default: ./)\n".
 		"\t-version: print the version information and quit\n".
 		"\t-verbose: output some correction information to stdout (default: not used)\n".
 		"\t-stage INT: start from which stage (default: 0)\n".
@@ -61,6 +62,7 @@ my @interleavedFileList ;
 
 my @rcorrectorArguments ;
 my @gzippedFileList ;
+my $tmpdir = "./" ;
 
 sub AddJellyFishReadFile
 {
@@ -197,6 +199,11 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 		push @rcorrectorArguments, $ARGV[$i + 1] ;
 		++$i ;
 	}
+	elsif ( $ARGV[$i] eq "-tmpd" )
+	{
+		$tmpdir = $ARGV[$i + 1] ;
+		++$i ;
+	}
 	elsif ( $ARGV[$i] eq "-wk" )
 	{
 		push @rcorrectorArguments, $ARGV[$i] ;
@@ -205,7 +212,7 @@ for ( $i = 0 ; $i < scalar(@ARGV) ; ++$i )
 	}
 	elsif ( $ARGV[$i] eq "-version" )
 	{
-		print ( "Rcorrector v1.0.5\n" ) ;
+		print ( "Rcorrector v1.0.7\n" ) ;
 		exit( 0 ) ;
 	}
 	else
@@ -255,29 +262,29 @@ my $crc = md5_hex( $jellyfishFiles ) ;
 if ( $stage <= 0 )
 {
 	print STDERR ( "Put the kmers into bloom filter\n" ) ;
-	print STDERR ( "$jellyfishBin bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\n" ) ;
-	die "Failed at stage 0.\n" if ( system( "bash -c \"$jellyfishBin bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o tmp_$crc.bc $jellyfishFiles\"" ) != 0 ) ;
+	print STDERR ( "$jellyfishBin bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o $tmpdir/tmp_$crc.bc $jellyfishFiles\n" ) ;
+	die "Failed at stage 0.\n" if ( system( "bash -c \"$jellyfishBin bc -m $kmerSize -s $bloomFilterSize -C -t $numOfThread -o $tmpdir/tmp_$crc.bc $jellyfishFiles\"" ) != 0 ) ;
 }
 
 if ( $stage <= 1 )
 {
 	print STDERR ( "Count the kmers in the bloom filter\n" ) ;
-	print STDERR ( "$jellyfishBin count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\n" ) ;
-	die "Failed at stage 1.\n" if ( system( "bash -c \"$jellyfishBin count -m $kmerSize -s 100000 -C -t $numOfThread --bc tmp_$crc.bc -o tmp_$crc.mer_counts $jellyfishFiles\"" ) != 0 ) ;
+	print STDERR ( "$jellyfishBin count -m $kmerSize -s 100000 -C -t $numOfThread --bc $tmpdir/tmp_$crc.bc -o $tmpdir/tmp_$crc.mer_counts $jellyfishFiles\n" ) ;
+	die "Failed at stage 1.\n" if ( system( "bash -c \"$jellyfishBin count -m $kmerSize -s 100000 -C -t $numOfThread --bc $tmpdir/tmp_$crc.bc -o $tmpdir/tmp_$crc.mer_counts $jellyfishFiles\"" ) != 0 ) ;
 }
 
 if ( $stage <= 2 )
 {
 	print STDERR ( "Dump the kmers\n" ) ;
-	print STDERR ( "$jellyfishBin dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump\n" ) ;
-	die "Failed at stage 2.\n" if ( system( "$jellyfishBin dump -L 2 tmp_$crc.mer_counts > tmp_$crc.jf_dump" ) != 0 )
+	print STDERR ( "$jellyfishBin dump -L 2 $tmpdir/tmp_$crc.mer_counts > $tmpdir/tmp_$crc.jf_dump\n" ) ;
+	die "Failed at stage 2.\n" if ( system( "$jellyfishBin dump -L 2 $tmpdir/tmp_$crc.mer_counts > $tmpdir/tmp_$crc.jf_dump" ) != 0 )
 }
 
 if ( $stage <= 3 )
 {
 	print STDERR ( "Error correction\n" ) ;
-	print STDERR ( "$WD/rcorrector @rcorrectorArguments $fileArguments -c tmp_$crc.jf_dump\n" ) ;
-	die "Failed at stage 3.\n" if ( system( "$WD/rcorrector @rcorrectorArguments $fileArguments -c tmp_$crc.jf_dump" ) != 0 ) ;
+	print STDERR ( "$WD/rcorrector @rcorrectorArguments $fileArguments -c $tmpdir/tmp_$crc.jf_dump\n" ) ;
+	die "Failed at stage 3.\n" if ( system( "$WD/rcorrector @rcorrectorArguments $fileArguments -c $tmpdir/tmp_$crc.jf_dump" ) != 0 ) ;
 }
 
-system( "rm tmp_$crc.bc tmp_$crc.mer_counts tmp_$crc.jf_dump" );
+system( "rm $tmpdir/tmp_$crc.bc $tmpdir/tmp_$crc.mer_counts $tmpdir/tmp_$crc.jf_dump" );

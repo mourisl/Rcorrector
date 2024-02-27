@@ -37,6 +37,7 @@ Rcorrector can also be applied to other type of sequencing data where the read c
 		-wk FLOAT: the proportion of kmers that are used to estimate weak kmer count threshold, lower for more divergent genome (default: 0.95)
 		-ek INT: expected number of kmers; does not affect the correctness of program but affects the memory usage (default: 100000000)
 		-stdout: output the corrected reads to stdout (default: not used)
+		-tmpd temp_file_directory: directory for tempoary files (default: ./)
 		-verbose: output some correction information to stdout (default: not used)
 		-stage INT: start from which stage (default: 0)
 			0-start from begining(storing kmers in bloom filter) ;
