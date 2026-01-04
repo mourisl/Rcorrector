@@ -21,6 +21,9 @@ Rcorrector can also be applied to other type of sequencing data where the read c
 2. Run `make` in the repo directory
 	During the `make` procedure, the script will check whether you have jellyfish2 in $PATH. If not, it will download and compile jellyfish2 from its repository. 
 
+Rcorrector is also available from [Bioconda](https://anaconda.org/channels/bioconda/packages/rcorrector/overview). You can install Rcorrector with `conda install -c conda-forge -c bioconda rcorrector`.
+
+
 ### Usage
 	Usage: perl run_rcorrector.pl [OPTIONS]
 	OPTIONS:
